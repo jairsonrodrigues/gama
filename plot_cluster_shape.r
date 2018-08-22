@@ -2,6 +2,7 @@ library(cluster)
 library(Rfast)
 library(fpc)
 library(factoextra)
+library(colorspace)
 
 source("util.r")
 
@@ -21,14 +22,25 @@ plot.f <- function(sol, d, algo = "not specified") {
       noise_df <- data.frame("dc1" = noise[,1], "dc2" = noise[,2], "cluster" = sol[w.noise])
   }
   
-  p1=ggplot(df, aes(x=dc2, y=dc1, color=factor(cluster), shape = factor(cluster)))
-  p1= p1 + geom_point(size = 3.5) + theme_bw(base_size = 18) + 
+  pal.c = c(90,40)
+  pal.l=c(33,93)
+  pal.power=c(1/5, 1.5)
+  cols <- rev(heat_hcl(max(df$cluster), c = pal.c, l=pal.l, power=pal.power))
+  
+  p1=ggplot(df, aes(x=dc2, y=dc1, color = factor(cluster), shape = factor(cluster)))
+  p1= p1 + geom_point(size = 3.5) +  
+    scale_color_manual(values = cols) +
     xlab("component 2") +
     ylab("component 1") +
     #ggtitle(algo) +  
+    theme_minimal(base_size = 24) +
     guides(color=guide_legend(title="CPU load:"), 
            shape=guide_legend(title="CPU load:")) +
-    theme(legend.position="top")  
+    
+    theme(legend.position="bottom", 
+          axis.ticks.length=unit(0.15,"cm"),
+          axis.ticks = element_line(size = 0.25),
+          axis.line = element_line(colour = "black"))  
   
   if (!is.null(noise_df)) {
     p1 = p1 + geom_point(data = noise_df, color="black", size = 12, pch = '*') +

@@ -31,11 +31,22 @@ plot.heatmap.load.f <- function(dataset, algo) {
     heat = data.frame("nodes" = nodes, "load" = load, "moment" = moment)
     
     # uses heat_cld palette from colorspace package
-    cols <- rev(heat_hcl(length(unique(target)), alpha = 1))
+    #heat_chl(12, c = c(80,30), l=c(30,90), power=c(1/5, 1.5))
+    #cols <- rev(heat_hcl(length(unique(target)), alpha = 1))
+    pal.c = c(90,40)
+    pal.l=c(33,93)
+    pal.power=c(1/5, 1.5)
+    cols <- rev(heat_hcl(length(unique(target)), c = pal.c, l=pal.l, power=pal.power))
+    
+    # set the x-axis breaks only to odd indices in moments vector (to save space in plot)
+    x_breaks <- seq(1,max(moment),max(10, roundUpNice(max(moment/10))))-1
+    #leg_breaks <- c(min(moment), roundUpNice(max(moment)/2), max(moment))
     
     c <- ggplot(heat, aes(y = factor(nodes), x = moment))
     c + geom_raster(aes(fill = load), interpolate = F) +
+      #scale_fill_gradientn(colors = cols, breaks = leg_breaks) + 
       scale_fill_gradientn(colors = cols) + 
+      scale_x_continuous(breaks = x_breaks) +
       labs(fill = "CPU load:") +
       xlab("time (seconds)") +
       ylab("cluster machine (node)") + 
@@ -57,22 +68,26 @@ plot.heatmap.cluster.f <- function(dataset, algo, clalgo, sol, centroid, noise.v
   
   heat = data.frame("nodes" = nodes, "clusters"= as.character(clusters), "moment" = moment)
   
-  cols <- rev(heat_hcl(max(unique(clusters))))
-  #cols <- rev( rainbow(length(unique(clusters))))
+  #cols <- rev(heat_hcl(max(unique(clusters))))
+  pal.c = c(90,40)
+  pal.l=c(33,93)
+  pal.power=c(1/5, 1.5)
+  cols <- rev(heat_hcl(max(unique(clusters)), c = pal.c, l=pal.l, power=pal.power))
   lbls <- sort(unique(clusters))
   
   # if there is more than one cluster and the solution has noise
   if( (length(unique(clusters)) > 1) && has.noise.f(sol)) {
     
     # adds one (+1) to cols vector due to the max(unique(clusters)) having 0 (noise)
-    cols <- rev(heat_hcl(max(unique(clusters)) +1))
+    cols <- rev(heat_hcl(max(unique(clusters)) +1, c = pal.c, l=pal.l, power=pal.power))
     noise.i = which(unique(clusters) == noise.value)
     cols[1] = "gray30"
     lbls[1] = "noise"
     
     # if there is only a single clusters
   } else if (length(unique(clusters)) == 1) {
-    cols[1] = rev(heat_hcl(120))[1] # close to yellow (pastel)
+    n.color = 100
+    cols[1] = rev(heat_hcl(n.color), c = pal.c, l=pal.l, power=pal.power)[n.color/2] # close to yellow (pastel)
     
     # if there is no an exact correspondece for all partition numbers
     # (remember: k-means vs. gama case, for clusters 1,2,4,5 and 1,2,3,5)
