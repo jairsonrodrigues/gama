@@ -25,6 +25,11 @@ plot.heatmap.load.f <- function(dataset, algo) {
     #target <- unique(dataset$total)
     nodes <- as.integer(sapply(dataset$hostname[target], function(x) { substr(x, 15, 15) })) + 1
     load <- dataset$user[target] + dataset$system[target] + dataset$iowait[target] + dataset$softirq[target]
+    #load <- dataset$user[target] 
+    #load <- dataset$system[target] 
+    #load <- round(dataset$iowait[target], 2)
+    #load <- round(dataset$softirq[target], 2)
+    
     moment <- round((dataset$timestamp[target] - min(dataset$timestamp[target])) + 1, 0)
 
     # choose length(unique(target) different values for colors in heat.colors

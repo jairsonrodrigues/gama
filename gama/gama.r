@@ -1,6 +1,6 @@
 # setwd
-this.dir <- dirname(sys.frame(1)$ofile)
-setwd(this.dir)
+# this.dir <- dirname(sys.frame(1)$ofile)
+# setwd(this.dir)
 
 #R CMD BATCH '--args large 1000 25' gamas.r gamas.out
 
