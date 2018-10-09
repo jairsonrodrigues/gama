@@ -1,7 +1,3 @@
-# setwd
-# this.dir <- dirname(sys.frame(1)$ofile)
-# setwd(this.dir)
-
 #R CMD BATCH '--args large 1000 25' gamas.r gamas.out
 
 library(GA)
@@ -106,8 +102,8 @@ print(args)
 #for (scale in scales) {
 
       k = 5 # cluster
-      #cpu <- read.csv(paste("data/data-", scale, ".csv", sep=""))
-      cpu.norm <- read.csv(paste("data/data-", scale, ".csv", sep=""))
+      #cpu <- read.csv(paste("data/cpu-", scale, ".csv", sep=""))
+      cpu.norm <- read.csv(paste("../data/cpu-", scale, ".csv", sep=""))
       
       # dimensions
       dimen = ncol(cpu.norm)

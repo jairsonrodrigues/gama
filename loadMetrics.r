@@ -5,8 +5,8 @@
 
 # load data
 cat("\n\nLoading data metrics ...")
-cpu.large <- read.csv("data/cpu-large.csv")
-cpu.large.all <- read.csv("data/all_exp2_large.csv")
+cpu.large <- read.csv("data/cpu-b1.csv")
+cpu.large.all <- read.csv("data/all_exp1_bigdata.csv")
 
 cat("Saving in memory variables.")
 save(cpu.large, cpu.large.all, file = "RData/metrics.RData")
