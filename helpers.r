@@ -90,8 +90,10 @@ gama <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01
   # uses distortion f(K) to choose the best k estimative
   if (is.na(k)) {
     
-    print("Choosing a k by using distortion f(K) method...")
-    
+    cm <- citation("ClusterR")
+    print(paste("Estimating k by using distortion f(K) method...", format(cm, style = "text")))
+    #print("")
+  
     opt = Optimal_Clusters_KMeans(data, 
                                   max_clusters = 10,
                                   plot_clusters = F,
@@ -129,6 +131,9 @@ gama <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01
   
   
   # call GA functions 
+  cm <- citation("GA")
+  print(paste("Starting genetic seach for centroids, by using GA Algorithms...", format(cm, style = "text")))
+  #print("")
   start.time <- Sys.time()
   
   .GlobalEnv$start.time <- start.time
@@ -157,7 +162,8 @@ gama <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01
   if (num_solutions == 1) { 
     solution <- matrix(genetic@solution,nrow = k,ncol = dims)
   } else {
-    # se o GA retornou mais que uma solução (toma a primeira, igual fitness)
+    # if there is more than a single solution (they are identical, in ASW, 
+    # and must be close for centroids values)
     solution <- matrix(genetic@solution[1,], nrow = k, ncol = dims)
   }
   
