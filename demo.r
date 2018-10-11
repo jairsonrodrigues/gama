@@ -1,11 +1,5 @@
 source("helpers.r")
+data("als.cpu.gig")
 
-raw <- read.csv("data/cpu-all.csv")
-raw <- raw[raw$exp == 'exp2',]
-raw <- raw[raw$scale == 'bigdata',]
-raw <- raw[raw$algo == 'svd',]
-raw <- raw[,c("user", "system", "iowait", "softirq")]
-
-gamaRes <- gama(raw, k = 3, plot.results = F)
-
-#plot.clusters(gamaRes)
+gama.res <- gama(als.cpu.gig, plot.internals = T, generations = 100)
+plot(gama.res, view.method = "pca")

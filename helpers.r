@@ -5,7 +5,7 @@ library(Rfast)    # matrix fast calculations
 library(ggplot2)  # graphics library
 
 # evaluate individuals according Average Silhouette Width Criterion
-fitness.asw <- function(individual, penality = TRUE) {
+fitness.asw <- function(individual, penality = F) {
   
   dims <- length(individual)/k
   
@@ -40,7 +40,7 @@ pop.f <- function(object) {
   upper <- object@upper
   nvars <- length(lower)
   
-  population <- matrix(as.double(NA), nrow = object@popSize, ncol = nvars)
+  population <- matrix(as.double(NA), nrow = object@popSize, ncol = dims * k)
   
   # generate the initial population based on uniform distribution
   for(j in 1:nvars) { 
@@ -49,25 +49,25 @@ pop.f <- function(object) {
   
   # checks impossible individuals which sum(loads) > 100
   # subtracts the load value until it reach the possible range
-  for(i in 1:object@popSize) {
-    repeat {
-      # which lines (1:k) of an individual in population (1:popSize) has load > 100
-      m <- matrix(population[i,], ncol = 4, nrow = k)
-      sums <- apply(m, 1, sum)
-      w.sums <- which(sums > 100)
-
-      # stop when all centroids of an individual have loads < 100
-      if (length(w.sums) == 0){
-        break
-      } else {
-        # subtracts the load by an proportional amount
-        for (y in w.sums) {
-          prop_over_all <- m[y,]/sums[y]
-          population[i,] <- as.vector(m[y, ] - prop_over_all)
-        }
-      } # else
-    }#repeat
-  } # for
+  # for(i in 1:object@popSize) {
+  #   repeat {
+  #     # which lines (1:k) of an individual in population (1:popSize) has load > 100
+  #     m <- matrix(population[i,], ncol = dims, nrow = k)
+  #     sums <- apply(m, 1, sum)
+  #     w.sums <- which(sums > 100)
+  # 
+  #     # stop when all centroids of an individual have loads < 100
+  #     if (length(w.sums) == 0){
+  #       break
+  #     } else {
+  #       # subtracts the load by an proportional amount
+  #       for (y in w.sums) {
+  #         prop_over_all <- m[y,]/sums[y]
+  #         population[i,] <- as.vector(m[y, ] - prop_over_all)
+  #       }
+  #     } # else
+  #   }#repeat
+  # } # for
   
   return(population)
 }
@@ -88,10 +88,10 @@ gama <- function(data, ...) UseMethod("gama")
 
 gama.default <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
                          elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
-                         fitness.function = fitness.asw, plot.results = TRUE, ...) {
+                         fitness.function = fitness.asw, plot.internals = TRUE, ...) {
   
   obj <- gama.clustering(data, k, crossover.rate, mutation.rate, elitism, pop.size, generations, seed.p, 
-                         fitness.function, plot.results)
+                         fitness.function, plot.internals)
   #list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
   obj$call <- match.call()
   class(obj) <- "gama"
@@ -115,14 +115,14 @@ print.gama <- function(x, ...) {
 # execute the clustering process guided by a defined criteria
 gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
                  elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
-                 fitness.function = fitness.asw, plot.results = TRUE) {
+                 fitness.function = fitness.asw, plot.internals = TRUE) {
   
   
   # uses distortion f(K) to choose the best k estimative
   if (is.na(k)) {
     
-    cm <- citation("ClusterR")
-    print(paste("Estimating k by using distortion f(K) method...", format(cm, style = "text")))
+    # cm <- citation("ClusterR")
+    # print(paste("Estimating k by using distortion f(K) method...", format(cm, style = "text")))
     #print("")
   
     opt = Optimal_Clusters_KMeans(data, 
@@ -162,8 +162,8 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   
   # call GA functions 
-  cm <- citation("GA")
-  print(paste("Starting genetic seach for centroids, by using GA Algorithms...", format(cm, style = "text")))
+  # cm <- citation("GA")
+  # print(paste("Starting genetic seach for centroids, by using GA Algorithms...", format(cm, style = "text")))
   #print("")
   start.time <- Sys.time()
   
@@ -191,7 +191,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   num_solutions = length(genetic@solution)/(k*dims)
   if (num_solutions == 1) { 
-    solution <- matrix(genetic@solution,nrow = k,ncol = dims)
+    solution <- matrix(genetic@solution, nrow = k, ncol = dims)
   } else {
     # if there is more than a single solution (they are identical, in ASW, 
     # and must be close for centroids values)
@@ -212,9 +212,13 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   solution.df <- solution.df[with(solution.df, order(apply(solution.df, 1, sum))), ]
   
   # plot the results
-  if (plot.results) {
-    plot(genetic)
-    plot(asw)
+  if (plot.internals) {
+    par(mfrow=c(1,2))
+    plot(genetic, main = "Evolution")
+    plot(asw, main = "ASW")
+    
+    # cm <- citation("cluster")
+    # print(paste("Average silhouette width package...", format(cm, style = "text")))
   }
   
   # setClass("gama", slots=list(original.data = "data.frame", centroids="data.frame", cluster="vector", asw.width="numeric"))
@@ -223,10 +227,10 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
 }
 
 # view.method = c("total.sum", "pca", "both")
-plot.clusters <- function(gamaResObject = NULL, view.method = "total.sum") {
+plot.gama <- function(x = NULL, view.method = "pca") {
   
-  dat <- gamaResObject@original.data
-  dat$clusters <- gamaResObject@cluster
+  dat <- x$original.data
+  dat$clusters <- x$cluster
   
   
   if (view.method == "total.sum") {
@@ -236,9 +240,10 @@ plot.clusters <- function(gamaResObject = NULL, view.method = "total.sum") {
       dat$total.sum <- total.sum
       dat$observation <- 1:nrow(dat)
       g <- ggplot(dat, aes(x = observation, y = total.sum, color = factor(clusters))) + 
-           geom_point() + 
-           labs(color = "partition") +
-           theme_minimal()
+        geom_point() + 
+        labs(color = "partition") +
+        xlab("observation") +
+        ylab("total sum of dimensions")
   } else if (view.method == "pca") {
     
       pca = prcomp(dat)
@@ -246,10 +251,12 @@ plot.clusters <- function(gamaResObject = NULL, view.method = "total.sum") {
       dat$pc.1 <- pca$x[,"PC1"]
       dat$pc.2 <- pca$x[,"PC2"]
       g <- ggplot(dat, aes(x = pc.1, y = pc.2, color = factor(clusters))) + 
-          geom_point() + 
-          labs(color = "partition") +
-          theme_minimal()
+        geom_point() + 
+        labs(color = "partition") +
+        xlab("principal component 1") +
+        ylab("principal component 2")
   }
   
+  g <- g + ggtitle("Cluster") + theme_minimal()
   plot(g)
 }
