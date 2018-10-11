@@ -6,6 +6,6 @@ raw <- raw[raw$scale == 'bigdata',]
 raw <- raw[raw$algo == 'svd',]
 raw <- raw[,c("user", "system", "iowait", "softirq")]
 
-gamaRes <- gama(raw)
+gamaRes <- gama(raw, k = 3, plot.results = F)
 
-plot.clusters(gamaRes)
+#plot.clusters(gamaRes)

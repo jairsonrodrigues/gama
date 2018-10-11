@@ -72,6 +72,9 @@ pop.f <- function(object) {
   return(population)
 }
 
+
+
+
 # tracing function
 # monitor.f <- function(obj) {
 #   now <- Sys.time()
@@ -81,8 +84,36 @@ pop.f <- function(object) {
 #   } else return(FALSE) #????
 # }
 
+gama <- function(data, ...) UseMethod("gama")
+
+gama.default <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
+                         elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
+                         fitness.function = fitness.asw, plot.results = TRUE, ...) {
+  
+  obj <- gama.clustering(data, k, crossover.rate, mutation.rate, elitism, pop.size, generations, seed.p, 
+                         fitness.function, plot.results)
+  #list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
+  obj$call <- match.call()
+  class(obj) <- "gama"
+  obj 
+}
+
+print.gama <- function(x, ...) {
+  cat("Call:\n")
+  print(x$call)
+  cat("\nResults:\n\n")
+  cat("\nOriginal data:\n")
+  print(x$original.data)
+  cat("\nCluster partitions:\n")
+  print(x$cluster)
+  cat("\nCluster Centroids:\n")
+  print(x$centroids)
+  cat("\nAverage Silhouette Width:\n")
+  print(x$asw.mean)
+}
+
 # execute the clustering process guided by a defined criteria
-gama <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
+gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
                  elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
                  fitness.function = fitness.asw, plot.results = TRUE) {
   
@@ -186,9 +217,9 @@ gama <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01
     plot(asw)
   }
   
-  setClass("gama", slots=list(original.data = "data.frame", centroids="data.frame", cluster="vector", asw.width="numeric"))
-  return(new ("gama", "original.data" = data, "centroids" = solution.df, "cluster" = as.vector(which.dists), "asw.width" = summary(asw)$avg.width))
-  
+  # setClass("gama", slots=list(original.data = "data.frame", centroids="data.frame", cluster="vector", asw.width="numeric"))
+  # return(new ("gama", "original.data" = data, "centroids" = solution.df, "cluster" = as.vector(which.dists), "asw.width" = summary(asw)$avg.width))
+  return(list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
 }
 
 # view.method = c("total.sum", "pca", "both")
