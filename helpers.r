@@ -5,7 +5,7 @@ library(Rfast)    # matrix fast calculations
 library(ggplot2)  # graphics library
 
 # evaluate individuals according Average Silhouette Width Criterion
-fitness.asw <- function(individual, penality = F) {
+fitness.asw <- function(individual, penality = T) {
   
   dims <- length(individual)/k
   
@@ -49,25 +49,25 @@ pop.f <- function(object) {
   
   # checks impossible individuals which sum(loads) > 100
   # subtracts the load value until it reach the possible range
-  # for(i in 1:object@popSize) {
-  #   repeat {
-  #     # which lines (1:k) of an individual in population (1:popSize) has load > 100
-  #     m <- matrix(population[i,], ncol = dims, nrow = k)
-  #     sums <- apply(m, 1, sum)
-  #     w.sums <- which(sums > 100)
-  # 
-  #     # stop when all centroids of an individual have loads < 100
-  #     if (length(w.sums) == 0){
-  #       break
-  #     } else {
-  #       # subtracts the load by an proportional amount
-  #       for (y in w.sums) {
-  #         prop_over_all <- m[y,]/sums[y]
-  #         population[i,] <- as.vector(m[y, ] - prop_over_all)
-  #       }
-  #     } # else
-  #   }#repeat
-  # } # for
+  for(i in 1:object@popSize) {
+    repeat {
+      # which lines (1:k) of an individual in population (1:popSize) has load > 100
+      m <- matrix(population[i,], ncol = dims, nrow = k)
+      sums <- apply(m, 1, sum)
+      w.sums <- which(sums > 100)
+
+      # stop when all centroids of an individual have loads < 100
+      if (length(w.sums) == 0){
+        break
+      } else {
+        # subtracts the load by an proportional amount
+        for (y in w.sums) {
+          prop_over_all <- m[y,]/sums[y]
+          population[i,] <- as.vector(m[y, ] - prop_over_all)
+        }
+      } # else
+    }#repeat
+  } # for
   
   return(population)
 }
