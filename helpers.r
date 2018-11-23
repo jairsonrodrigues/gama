@@ -1,8 +1,9 @@
-library(GA)       # genetic algorithms
-library(cluster)  # average silhouette width
-library(ClusterR) # distortion f(K)
-library(Rfast)    # matrix fast calculations
-library(ggplot2)  # graphics library
+library(GA)           # genetic algorithms
+library(cluster)      # average silhouette width
+library(ClusterR)     # distortion f(K)
+library(Rfast)        # matrix fast calculations
+library(ggplot2)      # graphics library
+library(clusterCrit)  # validation criteria
 
 # calculates an aproximation of the second derivative of a set of points
 # the maximum second derivative will be a good choice for the inflexion point (the elbow or knee)
@@ -29,7 +30,7 @@ best.k <- function(dataset = NULL) {
   
   distortion.fk.threshold = 0.85
   criteria <- c("distortion_fK", "variance_explained", "WCSSE", "dissimilarity", "silhouette", "AIC", "BIC", "Adjusted_Rsquared")
-   
+  
   bests <- c()
   count <- 1
   for (criterion in criteria) {
@@ -70,7 +71,11 @@ best.k <- function(dataset = NULL) {
   return (best_k)
 }
 
-# evaluate individuals according Average Silhouette Width Criterion
+
+
+
+# Maximizing solutions through Average Silhouette Width (ASW) criterion; 
+# from -1 (the worst) to 1 (the best).
 fitness.asw <- function(individual, penalty.function, ...) {
   
   dims <- length(individual)/k
@@ -82,32 +87,136 @@ fitness.asw <- function(individual, penalty.function, ...) {
   
   # to avoid a convergence for configurations different from user-specified k
   if (length(unique(which.dists)) < k) {
+    # maximum penalty
     fitness.value = -1
     
   } else {
-  
-      # calculate the average silhouette width
-      asw <- silhouette(which.dists, d2)
     
-      # try summarize the silhouette, returns (0) if error
-      fitness.value <- tryCatch(summary(asw)$avg.width, error = function (e) { return (0)})
+    # calculate the average silhouette width
+    asw <- silhouette(which.dists, d2)
+    
+    # try summarize the silhouette, returns (0) if error
+    fitness.value <- tryCatch(summary(asw)$avg.width, error = function (e) { return (0)})
+    
+    # optionally, some inequalities may be resolved by applying a penality
+    if (!is.null(penalty.function)) {
+      # sums <- apply(m.individual, 1, sum)
+      # overflow <- which(sums > 100)
+      # num_constraints = length(overflow)
+      # 
+      # if (num_constraints > 0) { 
+      #   penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow]) 
+      #   fitness.value <- fitness.value - penalty
+      # }
       
-      # optionally, some inequalities may be resolved by applying a penality
-      if (!is.null(penalty.function)) {
-        # sums <- apply(m.individual, 1, sum)
-        # overflow <- which(sums > 100)
-        # num_constraints = length(overflow)
-        # 
-        # if (num_constraints > 0) { 
-        #   penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow]) 
-        #   fitness.value <- fitness.value - penalty
-        # }
-        
-        penalty <- penalty.function(m.individual)
-        fitness.value <- fitness.value - penalty
-      }
+      penalty <- penalty.function(m.individual)
+      fitness.value <- fitness.value - penalty
+    }
   }
   return (fitness.value)
+}
+
+# Maximizing solutions through Calinski_Harabasz (CH) criterion. 
+# The higher the value, the "better" is the solution.
+fitness.ch <- function(individual, penalty.function, ...) {
+  
+  dims <- length(individual)/k
+  fitness.value <- NA
+  
+  m.individual <- matrix(individual, nrow = k, ncol = dims)
+  which.dists <- apply(dista(data, m.individual, "euclidean", square = TRUE), 1, which.min)
+  
+  # to avoid a convergence for configurations different from user-specified k
+  # the Calinski_Harabasz index does not have a specific boundary, like ASW or C-Index
+  # thus, the -10^5 assignment as maximum penalty.
+  if (length(unique(which.dists)) < k) {
+    fitness.value = 0
+    
+  } else {
+    
+    # calculate the Calinski_Harabasz index
+    ch <- intCriteria(as.matrix(data), which.dists, "Calinski_Harabasz")
+    fitness.value <- ch$calinski_harabasz
+    
+    # optionally, some inequalities may be resolved by applying a penality
+    if (!is.null(penalty.function)) {
+      penalty <- penalty.function(m.individual)
+      fitness.value <- fitness.value - penalty
+    }
+  }
+  return (fitness.value)
+  
+}
+
+# Evaluate individuals according C-Indez (CI) criterion.
+# Minimize solutions through C-Index (CI) criterion; from 1 (the worst) to 0 (the best).  
+#
+# C-Index varies between 0 and 1. The lower is the value the better is the cluster partition.
+# REF: Hubert, L.J., Levin, J.R. A general statistical framework for assessing categorical clustering 
+# in free recall. Psychol. Bull., 1976, 83, 1072-1080
+#
+# https://stats.stackexchange.com/questions/343878/computation-of-c-index-for-cluster-validation
+fitness.ci <- function(individual, penalty.function, ...) {
+  
+  dims <- length(individual)/k
+  fitness.value <- NA
+  
+  m.individual <- matrix(individual, nrow = k, ncol = dims)
+  which.dists <- apply(dista(data, m.individual, "euclidean", square = TRUE), 1, which.min)
+  
+  # to avoid a convergence for configurations different from user-specified k
+  if (length(unique(which.dists)) < k) {
+    # maximum penalty 
+    fitness.value = 1 
+    
+  } else {
+    
+    # calculate the Calinski_Harabasz index
+    ch <- intCriteria(as.matrix(data), which.dists, "C_Index")
+    fitness.value <- ch$c_index
+    
+    # optionally, some inequalities may be resolved by applying a penality
+    if (!is.null(penalty.function)) {
+      penalty <- penalty.function(m.individual)
+      fitness.value <- fitness.value + penalty
+    }
+  }
+  return (1 - fitness.value)
+  
+}
+
+# Maximize solutions through Dunn indezx (CH) criterion. 
+# Dunn index are usually used to identify the "compact and well separated clusters". 
+# The main drawback of Dunn's index is computational since calculating becomes 
+# computationally very expansive as number of clusters and number of data points 
+# increase. In the case of overlapped clusters the values of Dunn Index is not really 
+# reliable because of re-partitioning the results with the hard partition method. (Balasko, et al, 2005)
+fitness.di <- function(individual, penalty.function, ...) {
+  
+  dims <- length(individual)/k
+  fitness.value <- NA
+  
+  m.individual <- matrix(individual, nrow = k, ncol = dims)
+  which.dists <- apply(dista(data, m.individual, "euclidean", square = TRUE), 1, which.min)
+  
+  # to avoid a convergence for configurations different from user-specified k
+  if (length(unique(which.dists)) < k) {
+    fitness.value = 0
+    
+  } else {
+    
+    # calculate the Calinski_Harabasz index
+    ch <- intCriteria(as.matrix(data), which.dists, "Dunn")
+    fitness.value <- ch$dunn
+    
+    # optionally, some inequalities may be resolved by applying a penality
+    if (!is.null(penalty.function)) {
+      penalty <- penalty.function(m.individual)
+      fitness.value <- fitness.value - penalty
+    }
+  }
+  return (fitness.value)
+  
 }
 
 # generates a initial population of centroids
@@ -132,7 +241,7 @@ pop.f <- function(object) {
       m <- matrix(population[i,], ncol = dims, nrow = k)
       sums <- apply(m, 1, sum)
       w.sums <- which(sums > 100)
-
+      
       # stop when all centroids of an individual have loads < 100
       if (length(w.sums) == 0){
         break
@@ -163,12 +272,12 @@ gama <- function(data, ...) UseMethod("gama")
 
 gama.default <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
                          elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
-                         fitness.function = fitness.asw, 
+                         fitness.criterion = "ASW", 
                          penalty.function = NULL, 
                          plot.internals = TRUE, ...) {
   
   obj <- gama.clustering(data, k, crossover.rate, mutation.rate, elitism, pop.size, generations, seed.p, 
-                         fitness.function, penalty.function, plot.internals)
+                         fitness.criterion, penalty.function, plot.internals)
   #list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
   obj$call <- match.call()
   class(obj) <- "gama"
@@ -176,8 +285,7 @@ gama.default <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rat
 }
 
 print.gama <- function(x, ...) {
-  cat("Call:\n")
-  print(x$call)
+  
   cat("\nResults:\n\n")
   cat("\nOriginal data:\n")
   print(x$original.data)
@@ -186,14 +294,32 @@ print.gama <- function(x, ...) {
   cat("\nCluster Centroids:\n")
   print(x$centroids)
   cat("\nAverage Silhouette Width:\n")
-  print(x$asw.mean)
+  print(x$silhouette)
+  cat("\nCalinski_Harabasz:\n")
+  print(x$calinski_harabasz)
+  cat("\nC Index:\n")
+  print(x$c_index)
+  cat("\nDunn Index:\n")
+  print(x$dunn)
+  
+  cat("Call:\n")
+  print(x$call)
+  cat("Runtime:\n")
+  print(x$runtime)
 }
 
 # execute the clustering process guided by a defined criteria
 gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
-                 elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
-                 fitness.function = fitness.asw, penalty.function = NULL, plot.internals = TRUE) {
+                            elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
+                            fitness.criterion = "ASW", penalty.function = NULL, plot.internals = TRUE) {
   
+  # choose the correct fitnesse function
+  fitness.function <- switch (fitness.criterion, 
+                              "ASW" = fitness.asw, 
+                              "CH" = fitness.ch, 
+                              "CI" = fitness.ci,
+                              "DI" = fitness.di,
+                              fitness.asw)
   
   # uses distortion f(K) to choose the best k estimative
   if (is.na(k)) {
@@ -201,7 +327,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
     # cm <- citation("ClusterR")
     # print(paste("Estimating k by using distortion f(K) method...", format(cm, style = "text")))
     #print("")
-  
+    
     opt = Optimal_Clusters_KMeans(data, 
                                   max_clusters = 10,
                                   plot_clusters = F,
@@ -265,7 +391,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
                 pmutation = mutation.rate, 
                 pcrossover = crossover.rate, 
                 maxiter = generations, 
-                maxFitness = 1.0, 
+                #maxFitness = 1.0, 
                 fitness = fitness.function, penalty.function,
                 lower = lower_bound,
                 upper = upper_bound,
@@ -285,11 +411,19 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   # calculates the average silhouette width
   which.dists <- apply(dista(data, solution, "euclidean", square = TRUE), 1, which.min)
-  asw <- silhouette(which.dists, d2)
   
-  print(paste("Clustering process completed in:", round(end.time - start.time, 2), "seconds", sep = " "))
+  asw <- silhouette(which.dists, d2)
+  ch <- intCriteria(as.matrix(data), which.dists, "Calinski_Harabasz")
+  ci <- intCriteria(as.matrix(data), which.dists, "C_index")
+  di <- intCriteria(as.matrix(data), which.dists, "Dunn")
+  
+  
+  print(paste("Clustering process completed in:", round(end.time - start.time, 4), "seconds", sep = " "))
   print(paste("Acceptable (distinct) solutions: ",  length(genetic@solution)/(k*dims), sep = " "))
-  print(paste("Average Silhouette Width (ASW): ", round(summary(asw)$avg.width, 2), sep = " "))
+  print(paste("Average Silhouette Width (ASW): ", round(summary(asw)$avg.width, 4), sep = " "))
+  print(paste("Calinski Harabasz (CH): ", round(ch$calinski_harabasz, 4), sep = " "))
+  print(paste("C-Index (CI): ", round(ci$c_index, 4), sep = " "))
+  print(paste("Dunn Index (DI): ", round(di$dunn, 4), sep = " "))
   
   # builds the solution object
   solution.df <- as.data.frame(solution)
@@ -298,10 +432,10 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   # plot the results
   if (plot.internals) {
-    par(mfrow=c(1,2))
+    #par(mfrow=c(1,2))
     plot(genetic, main = "Evolution")
     plot(asw, main = "ASW")
-    garbage <- dev.off()
+    #garbage <- dev.off()
     
     # cm <- citation("cluster")
     # print(paste("Average silhouette width package...", format(cm, style = "text")))
@@ -309,7 +443,14 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   # setClass("gama", slots=list(original.data = "data.frame", centroids="data.frame", cluster="vector", asw.width="numeric"))
   # return(new ("gama", "original.data" = data, "centroids" = solution.df, "cluster" = as.vector(which.dists), "asw.width" = summary(asw)$avg.width))
-  return(list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
+  return(list(original.data = data, 
+              centroids = solution.df, 
+              cluster = as.vector(which.dists), 
+              silhouette = summary(asw)$avg.width, 
+              calinski_harabasz = ch$calinski_harabasz, 
+              c_index = ci$c_index,
+              dunn_index = di$dunn,
+              runtime = paste(runtime= round(end.time - start.time, 2), "seconds", sep = " ")))
 }
 
 # view.method = c("total.sum", "pca", "both")
@@ -321,26 +462,26 @@ plot.gama <- function(x = NULL, view.method = "pca") {
   
   if (view.method == "total.sum") {
     
-      total.sum = apply(dat, 1, sum)
-      
-      dat$total.sum <- total.sum
-      dat$observation <- 1:nrow(dat)
-      g <- ggplot(dat, aes(x = observation, y = total.sum, color = factor(clusters))) + 
-        geom_point() + 
-        labs(color = "partition") +
-        xlab("observation") +
-        ylab("total sum of dimensions")
+    total.sum = apply(dat, 1, sum)
+    
+    dat$total.sum <- total.sum
+    dat$observation <- 1:nrow(dat)
+    g <- ggplot(dat, aes(x = observation, y = total.sum, color = factor(clusters))) + 
+      geom_point() + 
+      labs(color = "partition") +
+      xlab("observation") +
+      ylab("total sum of dimensions")
   } else if (view.method == "pca") {
     
-      pca = prcomp(dat)
-      
-      dat$pc.1 <- pca$x[,"PC1"]
-      dat$pc.2 <- pca$x[,"PC2"]
-      g <- ggplot(dat, aes(x = pc.1, y = pc.2, color = factor(clusters))) + 
-        geom_point() + 
-        labs(color = "partition") +
-        xlab("principal component 1") +
-        ylab("principal component 2")
+    pca = prcomp(dat)
+    
+    dat$pc.1 <- pca$x[,"PC1"]
+    dat$pc.2 <- pca$x[,"PC2"]
+    g <- ggplot(dat, aes(x = pc.1, y = pc.2, color = factor(clusters))) + 
+      geom_point() + 
+      labs(color = "partition") +
+      xlab("principal component 1") +
+      ylab("principal component 2")
   }
   
   g <- g + ggtitle("Cluster") + theme_minimal()
