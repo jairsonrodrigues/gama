@@ -4,109 +4,30 @@ library(ClusterR) # distortion f(K)
 library(Rfast)    # matrix fast calculations
 library(ggplot2)  # graphics library
 
-# calculates an aproximation of the second derivative of a set of points
-# the maximum second derivative will be a good choice for the inflexion point (the elbow or knee)
-# https://stackoverflow.com/questions/2018178/finding-the-best-trade-off-point-on-a-curve
-# https://raghavan.usc.edu/papers/kneedle-simplex11.pdf (Finding a “Kneedle” in a Haystack: 
-# Detecting Knee Points in System Behavior)
-where.is.knee <- function(dataset = NULL) {
-  
-  lower.limit <- 2
-  upper.limit <- length(dataset) -1
-  
-  second.derivative <- sapply(lower.limit:upper.limit, function(i) { dataset[i+1] + dataset[i-1] - 2 * dataset[i] })
-  
-  w.max <- which.max(second.derivative)
-  
-  return(w.max +1)
-  
-}
-
-# Finds suggestions for best k based on 
-# Lampros Mouselimis (2018). ClusterR: Gaussian Mixture Models, K-Means, Mini-Batch-Kmeans and K-Medoids
-# Clustering. R package version 1.1.0. https://CRAN.R-project.org/package=ClusterR
-best.k <- function(dataset = NULL) {
-  
-  distortion.fk.threshold = 0.85
-  criteria <- c("distortion_fK", "variance_explained", "WCSSE", "dissimilarity", "silhouette", "AIC", "BIC", "Adjusted_Rsquared")
-   
-  bests <- c()
-  count <- 1
-  for (criterion in criteria) {
-    #pdf(g_df)
-    opt = Optimal_Clusters_KMeans(dataset, 
-                                  max_clusters = 10,
-                                  #num_init = 10,
-                                  plot_clusters = F,
-                                  verbose = F,
-                                  criterion = criterion, 
-                                  fK_threshold = distortion.fk.threshold,
-                                  initializer = 'kmeans++', 
-                                  tol_optimal_init = 0.2)
-    
-    #garbage <- dev.off()
-    
-    if (criterion == "distortion_fK") {
-      
-      #best_k = min(which(opt < distortion.fk.threshold))
-      best_k = which.min(opt)
-      
-    } else if (criterion == "silhouette") {
-      
-      best_k <- which.max(opt)
-      
-    } else {
-      best_k <- where.is.knee(opt)
-    }
-    
-    #print(best_k)
-    bests[count] <- best_k
-    count <- count + 1
-  }
-  
-  uniques <- unique(bests)
-  best_k <- uniques[which.max(sapply(uniques, function(x) { length(which(bests == x)) } ))]
-  
-  return (best_k)
-}
-
 # evaluate individuals according Average Silhouette Width Criterion
-fitness.asw <- function(individual, penalty.function, ...) {
+fitness.asw <- function(individual, penality = T) {
   
-  dims <- length(individual)/k
+  # convert an individual to decimal representation
+  individual.dec <- sapply(seq(from = 1, to = 504, by = 2), function(x) { binary2decimal(individual[x:(x+1)]) } )
   
-  fitness.value <- NA
+  # calculate the average silhouette width
+  asw <- silhouette(individual.dec, d2)
   
-  m.individual <- matrix(individual, nrow = k, ncol = dims)
-  which.dists <- apply(dista(data, m.individual, "euclidean", square = TRUE), 1, which.min)
+  # try summarize the silhouette, returns (0) if error
+  fitness.value <- tryCatch(summary(asw)$avg.width, error = function (e) { return (0)})
   
-  # to avoid a convergence for configurations different from user-specified k
-  if (length(unique(which.dists)) < k) {
-    fitness.value = -1
-    
-  } else {
+  # optionally, some inequalities may be resolved by applying a penality
+  # if (penality) {
+  #   sums <- apply(m.individual, 1, sum)
+  #   overflow <- which(sums > 100)
+  #   num_constraints = length(overflow)
+  # 
+  #   if (num_constraints > 0) { 
+  #     penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow]) 
+  #     fitness.value <- fitness.value - penalty
+  #   }
+  # }
   
-      # calculate the average silhouette width
-      asw <- silhouette(which.dists, d2)
-    
-      # try summarize the silhouette, returns (0) if error
-      fitness.value <- tryCatch(summary(asw)$avg.width, error = function (e) { return (0)})
-      
-      # optionally, some inequalities may be resolved by applying a penality
-      if (!is.null(penalty.function)) {
-        # sums <- apply(m.individual, 1, sum)
-        # overflow <- which(sums > 100)
-        # num_constraints = length(overflow)
-        # 
-        # if (num_constraints > 0) { 
-        #   penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow]) 
-        #   fitness.value <- fitness.value - penalty
-        # }
-        
-        penalty <- penalty.function(m.individual)
-        fitness.value <- fitness.value - penalty
-      }
-  }
   return (fitness.value)
 }
 
@@ -150,6 +71,8 @@ pop.f <- function(object) {
 }
 
 
+
+
 # tracing function
 # monitor.f <- function(obj) {
 #   now <- Sys.time()
@@ -163,12 +86,10 @@ gama <- function(data, ...) UseMethod("gama")
 
 gama.default <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
                          elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
-                         fitness.function = fitness.asw, 
-                         penalty.function = NULL, 
-                         plot.internals = TRUE, ...) {
+                         fitness.function = fitness.asw, plot.internals = TRUE, ...) {
   
   obj <- gama.clustering(data, k, crossover.rate, mutation.rate, elitism, pop.size, generations, seed.p, 
-                         fitness.function, penalty.function, plot.internals)
+                         fitness.function, plot.internals)
   #list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
   obj$call <- match.call()
   class(obj) <- "gama"
@@ -192,7 +113,7 @@ print.gama <- function(x, ...) {
 # execute the clustering process guided by a defined criteria
 gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.rate = 0.01, 
                  elitism = 0.05, pop.size = 25, generations = 100, seed.p = 42,
-                 fitness.function = fitness.asw, penalty.function = NULL, plot.internals = TRUE) {
+                 fitness.function = fitness.asw, plot.internals = TRUE) {
   
   
   # uses distortion f(K) to choose the best k estimative
@@ -211,7 +132,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
                                   initializer = 'kmeans++', 
                                   tol_optimal_init = 0.2)
     
-    k <- best.k(dataset = data)
+    k = as.integer(which.min(opt))
     print(paste("best k suggestion = ", k))
     
   }
@@ -220,9 +141,9 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   .GlobalEnv$k = k
   .GlobalEnv$dims = ncol(data)
   
-  s <- "gareal_lsSelection"
-  m <- "gareal_rsMutation"
-  c <- "gareal_blxCrossover"
+  s <- "gabin_lsSelection"
+  m <- "gabin_rsMutation"
+  c <- "gabin_blxCrossover"
   
   elit.rate = floor(pop.size * elitism)
   
@@ -234,13 +155,8 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   rm(d)
   gc()
   
-  lowers <- apply(data, 2, min)
-  uppers <- apply(data, 2, max)
-  
-  lower_bound <- unlist(lapply(lowers, function (x) { rep(x, k) } ))
-  upper_bound <- unlist(lapply(uppers, function (x) { rep(x, k) } ))
-  #lower_bound <-  c(rep(min(data[, 1]), k), rep(min(data[, 2]), k), rep(min(data[, 3]), k), rep(min(data[, 4]), k))
-  #upper_bound <-  c(rep(max(data[, 1]), k), rep(max(data[, 2]), k), rep(max(data[, 3]), k), rep(max(data[, 4]), k))
+  # lower_bound <-  c(rep(min(data[, 1]), k), rep(min(data[, 2]), k), rep(min(data[, 3]), k), rep(min(data[, 4]), k))
+  # upper_bound <-  c(rep(max(data[, 1]), k), rep(max(data[, 2]), k), rep(max(data[, 3]), k), rep(max(data[, 4]), k))
   
   
   # call GA functions 
@@ -251,24 +167,22 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   .GlobalEnv$start.time <- start.time
   .GlobalEnv$checked.time <- start.time
-  
-  #if (missing(penalty.function)) penalty.function <- NA
-  
-  genetic <- ga(type = "real-valued", 
+  genetic <- ga(type = "binary", 
                 seed = seed.p, 
-                population = pop.f,
-                selection = s, 
-                mutation = m, 
-                crossover = c,
+                nBits = 2 * nrow(data),
+                #population = pop.f,
+                # selection = s, 
+                # mutation = m, 
+                # crossover = c,
                 popSize = pop.size, 
                 elitism = elit.rate, 
                 pmutation = mutation.rate, 
                 pcrossover = crossover.rate, 
                 maxiter = generations, 
                 maxFitness = 1.0, 
-                fitness = fitness.function, penalty.function,
-                lower = lower_bound,
-                upper = upper_bound,
+                fitness = fitness.function,
+                # lower = lower_bound,
+                # upper = upper_bound,
                 parallel = F,
                 monitor = F)
   
@@ -276,32 +190,28 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   num_solutions = length(genetic@solution)/(k*dims)
   if (num_solutions == 1) { 
-    solution <- matrix(genetic@solution, nrow = k, ncol = dims)
+    solution <- genetic@solution
   } else {
     # if there is more than a single solution (they are identical, in ASW, 
     # and must be close for centroids values)
-    solution <- matrix(genetic@solution[1,], nrow = k, ncol = dims)
+    solution <- genetic@solution[1,]
   }
   
-  # calculates the average silhouette width
-  which.dists <- apply(dista(data, solution, "euclidean", square = TRUE), 1, which.min)
-  asw <- silhouette(which.dists, d2)
+  sol.dec <- sapply(seq(from = 1, to = 504, by = 2), function(x) { binary2decimal(solution[x:(x+1)]) } )
+  
+  # calculate the average silhouette width
+  asw <- silhouette(sol.dec, d2)
+  
   
   print(paste("Clustering process completed in:", round(end.time - start.time, 2), "seconds", sep = " "))
-  print(paste("Acceptable (distinct) solutions: ",  length(genetic@solution)/(k*dims), sep = " "))
+  print(paste("Acceptable (identical) solutions: ",  length(genetic@solution)/(k*dims), sep = " "))
   print(paste("Average Silhouette Width (ASW): ", round(summary(asw)$avg.width, 2), sep = " "))
-  
-  # builds the solution object
-  solution.df <- as.data.frame(solution)
-  colnames(solution.df) <- colnames(data)
-  solution.df <- solution.df[with(solution.df, order(apply(solution.df, 1, sum))), ]
   
   # plot the results
   if (plot.internals) {
     par(mfrow=c(1,2))
     plot(genetic, main = "Evolution")
     plot(asw, main = "ASW")
-    garbage <- dev.off()
     
     # cm <- citation("cluster")
     # print(paste("Average silhouette width package...", format(cm, style = "text")))
@@ -309,7 +219,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   
   # setClass("gama", slots=list(original.data = "data.frame", centroids="data.frame", cluster="vector", asw.width="numeric"))
   # return(new ("gama", "original.data" = data, "centroids" = solution.df, "cluster" = as.vector(which.dists), "asw.width" = summary(asw)$avg.width))
-  return(list(original.data = data, centroids=solution.df, cluster=as.vector(which.dists), asw.mean=summary(asw)$avg.width))
+  return(list(original.data = data, centroids=NA, cluster=as.vector(sol.dec), asw.mean=summary(asw)$avg.width))
 }
 
 # view.method = c("total.sum", "pca", "both")
