@@ -4,32 +4,106 @@ library(ClusterR) # distortion f(K)
 library(Rfast)    # matrix fast calculations
 library(ggplot2)  # graphics library
 
+# calculates an aproximation of the second derivative of a set of points
+# the maximum second derivative will be a good choice for the inflexion point (the elbow or knee)
+# https://stackoverflow.com/questions/2018178/finding-the-best-trade-off-point-on-a-curve
+# https://raghavan.usc.edu/papers/kneedle-simplex11.pdf (Finding a “Kneedle” in a Haystack: 
+# Detecting Knee Points in System Behavior)
+where.is.knee <- function(dataset = NULL) {
+  
+  lower.limit <- 2
+  upper.limit <- length(dataset) -1
+  
+  second.derivative <- sapply(lower.limit:upper.limit, function(i) { dataset[i+1] + dataset[i-1] - 2 * dataset[i] })
+  
+  w.max <- which.max(second.derivative)
+  
+  return(w.max +1)
+  
+}
+
+# Finds suggestions for best k based on 
+# Lampros Mouselimis (2018). ClusterR: Gaussian Mixture Models, K-Means, Mini-Batch-Kmeans and K-Medoids
+# Clustering. R package version 1.1.0. https://CRAN.R-project.org/package=ClusterR
+best.k <- function(dataset = NULL) {
+  
+  distortion.fk.threshold = 0.85
+  criteria <- c("distortion_fK", "variance_explained", "WCSSE", "dissimilarity", "silhouette", "AIC", "BIC", "Adjusted_Rsquared")
+   
+  bests <- c()
+  count <- 1
+  for (criterion in criteria) {
+    #pdf(g_df)
+    opt = Optimal_Clusters_KMeans(dataset, 
+                                  max_clusters = 10,
+                                  #num_init = 10,
+                                  plot_clusters = F,
+                                  verbose = F,
+                                  criterion = criterion, 
+                                  fK_threshold = distortion.fk.threshold,
+                                  initializer = 'kmeans++', 
+                                  tol_optimal_init = 0.2)
+    
+    #garbage <- dev.off()
+    
+    if (criterion == "distortion_fK") {
+      
+      #best_k = min(which(opt < distortion.fk.threshold))
+      best_k = which.min(opt)
+      
+    } else if (criterion == "silhouette") {
+      
+      best_k <- which.max(opt)
+      
+    } else {
+      best_k <- where.is.knee(opt)
+    }
+    
+    #print(best_k)
+    bests[count] <- best_k
+    count <- count + 1
+  }
+  
+  uniques <- unique(bests)
+  best_k <- uniques[which.max(sapply(uniques, function(x) { length(which(bests == x)) } ))]
+  
+  return (best_k)
+}
+
 # evaluate individuals according Average Silhouette Width Criterion
 fitness.asw <- function(individual, penality = T) {
   
   dims <- length(individual)/k
   
+  fitness.value <- NA
+  
   m.individual <- matrix(individual, nrow = k, ncol = dims)
   which.dists <- apply(dista(data, m.individual, "euclidean", square = TRUE), 1, which.min)
   
-  # calculate the average silhouette width
-  asw <- silhouette(which.dists, d2)
-
-  # try summarize the silhouette, returns (0) if error
-  fitness.value <- tryCatch(summary(asw)$avg.width, error = function (e) { return (0)})
+  # to avoid a convergence for configurations different from user-specified k
+  if (length(unique(which.dists)) < k) {
+    fitness.value = -1
+    
+  } else {
   
-  # optionally, some inequalities may be resolved by applying a penality
-  if (penality) {
-    sums <- apply(m.individual, 1, sum)
-    overflow <- which(sums > 100)
-    num_constraints = length(overflow)
-
-    if (num_constraints > 0) { 
-      penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow]) 
-      fitness.value <- fitness.value - penalty
-    }
+      # calculate the average silhouette width
+      asw <- silhouette(which.dists, d2)
+    
+      # try summarize the silhouette, returns (0) if error
+      fitness.value <- tryCatch(summary(asw)$avg.width, error = function (e) { return (0)})
+      
+      # optionally, some inequalities may be resolved by applying a penality
+      if (penality) {
+        sums <- apply(m.individual, 1, sum)
+        overflow <- which(sums > 100)
+        num_constraints = length(overflow)
+    
+        if (num_constraints > 0) { 
+          penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow]) 
+          fitness.value <- fitness.value - penalty
+        }
+      }
   }
-  
   return (fitness.value)
 }
 
@@ -71,8 +145,6 @@ pop.f <- function(object) {
   
   return(population)
 }
-
-
 
 
 # tracing function
@@ -134,7 +206,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
                                   initializer = 'kmeans++', 
                                   tol_optimal_init = 0.2)
     
-    k = as.integer(which.min(opt))
+    k <- best.k(dataset = data)
     print(paste("best k suggestion = ", k))
     
   }
@@ -157,8 +229,13 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
   rm(d)
   gc()
   
-  lower_bound <-  c(rep(min(data[, 1]), k), rep(min(data[, 2]), k), rep(min(data[, 3]), k), rep(min(data[, 4]), k))
-  upper_bound <-  c(rep(max(data[, 1]), k), rep(max(data[, 2]), k), rep(max(data[, 3]), k), rep(max(data[, 4]), k))
+  lowers <- apply(data, 2, min)
+  uppers <- apply(data, 2, max)
+  
+  lower_bound <- unlist(lapply(lowers, function (x) { rep(x, k) } ))
+  upper_bound <- unlist(lapply(uppers, function (x) { rep(x, k) } ))
+  #lower_bound <-  c(rep(min(data[, 1]), k), rep(min(data[, 2]), k), rep(min(data[, 3]), k), rep(min(data[, 4]), k))
+  #upper_bound <-  c(rep(max(data[, 1]), k), rep(max(data[, 2]), k), rep(max(data[, 3]), k), rep(max(data[, 4]), k))
   
   
   # call GA functions 
@@ -184,7 +261,7 @@ gama.clustering <- function(data = NULL, k = NA, crossover.rate = 0.9, mutation.
                 fitness = fitness.function,
                 lower = lower_bound,
                 upper = upper_bound,
-                parallel = T,
+                parallel = F,
                 monitor = F)
   
   end.time <- Sys.time()

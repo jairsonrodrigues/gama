@@ -1,7 +1,6 @@
 source("helpers.r")
-data("als.cpu.gig")
+data("pca.cpu.big.2")
 
-gama.res <- gama(als.cpu.gig, plot.internals = T, generations = 100)
-plot(gama.res, view.method = "pca") 
+gama.res <- gama(pca.cpu.big.2, plot.internals = T, generations = 250, seed.p = 17)
+plot(gama.res, view.method = "pca")
 
-nkn
