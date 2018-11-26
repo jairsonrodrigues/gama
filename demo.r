@@ -1,4 +1,4 @@
-source("helpers.r")
+source("R/core.R")
 data("als.cpu.big.2")
 data(iris)
 my_data <- als.cpu.big.2
