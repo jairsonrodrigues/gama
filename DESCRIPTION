@@ -1,0 +1,19 @@
+Package: gama
+Type: Package
+Title: Genetic Approach to MAximize clustering criterion
+Version: 1.0
+Date: 2018-11-26
+Author: Jairson Rodrigues
+Maintainer: Jairson Rodrigues <jairson.rodrigues@univasf.edu.br>
+Description: A hybrid approach to perform clustering based on genetic algorithms search for best centers configurations in order to maximize (or minimize) one of the given internal validation criterion: Silhouette, Dunn Index, C Index or Calinski/Harabasz Index.
+Imports: 
+  cluster, 
+  clusterCrit, 
+  NbClust, 
+  GA, 
+  ggplot2, 
+  methods,
+  Rfast
+License: GPL-2
+LazyData: yes
+RoxygenNote: 6.1.1
