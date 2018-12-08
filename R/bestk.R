@@ -2,23 +2,45 @@
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("k", "dat", "data", "d2"))
 
+best.k <- function(dataset = NULL) {
+
+  cat("Looking for the best k value...\n")
+  indices <- c("kl", "ch", "hartigan", "ccc", "scott", "marriot", "trcovw", "tracew", "friedman", "rubin", "cindex", "db", "silhouette", "duda", "pseudot2", "beale", "ratkowsky", "ball", "ptbiserial", "frey", "mcclain", "dunn", "sdindex", "sdbw")
+
+  nc <- c()
+  count = 1
+  # nc will contais the best k value suggestion for each index
+  for (i in indices) {
+    objNbClust <- NbClust::NbClust(dataset, min.nc = 2, max.nc = 10, method = "kmeans", index = i)
+    nc[count] <- as.integer(objNbClust$Best.nc["Number_clusters"])
+    count = count + 1
+  }
+
+  nc <- nc[which(nc >=2)]
+  uniques <- sort(unique(nc))
+  best_k <- uniques[which.max(sapply(uniques, function(x) { length(which(nc == x)) } ))]
+  cat(paste("There was found", length(uniques), "suggestions for k = [", toString(uniques), "].\n", sep = " "))
+  cat(paste("Best k suggestion by majority voting = ", best_k, ".\n\n", sep =""))
+  return (best_k)
+}
+
 # calculates an aproximation of the second derivative of a set of points
 # the maximum second derivative will be a good choice for the inflexion point (the elbow or knee)
 # https://stackoverflow.com/questions/2018178/finding-the-best-trade-off-point-on-a-curve
 # https://raghavan.usc.edu/papers/kneedle-simplex11.pdf (Finding a “Kneedle” in a Haystack:
 # Detecting Knee Points in System Behavior)
-where.is.knee <- function(dataset = NULL) {
-
-  lower.limit <- 2
-  upper.limit <- length(dataset) -1
-
-  second.derivative <- sapply(lower.limit:upper.limit, function(i) { dataset[i+1] + dataset[i-1] - 2 * dataset[i] })
-
-  w.max <- which.max(second.derivative)
-
-  return(w.max +1)
-
-}
+# where.is.knee <- function(dataset = NULL) {
+#
+#   lower.limit <- 2
+#   upper.limit <- length(dataset) -1
+#
+#   second.derivative <- sapply(lower.limit:upper.limit, function(i) { dataset[i+1] + dataset[i-1] - 2 * dataset[i] })
+#
+#   w.max <- which.max(second.derivative)
+#
+#   return(w.max +1)
+#
+# }
 
 
 
@@ -116,25 +138,3 @@ where.is.knee <- function(dataset = NULL) {
 #
 #   return (best_k)
 # }
-
-best.k <- function(dataset = NULL) {
-
-  cat("Looking for the best k value...\n")
-  indices <- c("kl", "ch", "hartigan", "ccc", "scott", "marriot", "trcovw", "tracew", "friedman", "rubin", "cindex", "db", "silhouette", "duda", "pseudot2", "beale", "ratkowsky", "ball", "ptbiserial", "frey", "mcclain", "dunn", "sdindex", "sdbw")
-
-  nc <- c()
-  count = 1
-  # nc will contais the best k value suggestion for each index
-  for (i in indices) {
-    objNbClust <- NbClust::NbClust(dataset, min.nc = 2, max.nc = 10, method = "kmeans", index = i)
-    nc[count] <- as.integer(objNbClust$Best.nc["Number_clusters"])
-    count = count + 1
-  }
-
-  nc <- nc[which(nc >=2)]
-  uniques <- sort(unique(nc))
-  best_k <- uniques[which.max(sapply(uniques, function(x) { length(which(nc == x)) } ))]
-  cat(paste("There was found", length(uniques), "suggestions for k = [", toString(uniques), "].\n", sep = " "))
-  cat(paste("Best k suggestion by majority voting = ", best_k, ".\n\n", sep =""))
-  return (best_k)
-}

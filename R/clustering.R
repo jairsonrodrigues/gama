@@ -1,18 +1,10 @@
 # libraries are used along the code by explicit refer syntax package::function()
-# library(GA)           # genetic algorithms
-# library(cluster)      # average silhouette width
-# library(ClusterR)     # distortion f(K)
-# library(Rfast)        # matrix fast calculations
-# library(ggplot2)      # graphics library
-# library(clusterCrit)  # validation criteria
-
-# source("R/fitness.R")
-# source("R/bestk.R")
-devtools::load_all()
+source("R/fitness.R")
+source("R/bestk.R")
 
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("dims", "clusters", "observation", "pc.1", "pc.2"))
 
-# generates an initial population of centroids
+# generates an initial population of candidate centers for partitions
 pop.f <- function(object) {
 
   lower <- object@lower
@@ -26,33 +18,8 @@ pop.f <- function(object) {
     population[,j] <- runif(object@popSize, lower[j], upper[j])
   }
 
-  # checks impossible individuals which sum(loads) > 100
-  # subtracts the load value until it reach the possible range
-  # for(i in 1:object@popSize) {
-  #   repeat {
-  #     # which lines (1:k) of an individual in population (1:popSize) has load > 100
-  #     m <- matrix(population[i,], ncol = dims, nrow = k)
-  #     sums <- apply(m, 1, sum)
-  #     w.sums <- which(sums > 100)
-  #
-  #     # stop when all centroids of an individual have loads < 100
-  #     if (length(w.sums) == 0){
-  #       break
-  #     } else {
-  #       # subtracts the load by an proportional amount
-  #       for (y in w.sums) {
-  #         prop_over_all <- m[y,]/sums[y]
-  #         population[i,] <- as.vector(m[y, ] - prop_over_all)
-  #       }
-  #     } # else
-  #   }#repeat
-  # } # for
-
   return(population)
 }
-
-#
-#gama <- function(data, ...) { UseMethod("gama") }
 
 gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
                          mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
@@ -102,13 +69,12 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
   lower_bound <- unlist(lapply(lowers, function (x) { rep(x, k) } ))
   upper_bound <- unlist(lapply(uppers, function (x) { rep(x, k) } ))
 
-  # call GA functions
-  # cm <- citation("GA")
   start.time <- Sys.time()
 
   .GlobalEnv$start.time <- start.time
   .GlobalEnv$checked.time <- start.time
 
+  # call GA functions
   genetic <- GA::ga(type = "real-valued",
                     seed = seed.p,
                     population = pop.f,
@@ -215,22 +181,11 @@ print.gama <- function(x, ...) {
 }
 setMethod("print", "gama", print.gama )
 
-# summary.gama <- function(x = NULL, ...) {
-#
-#   print("to do...")
-#
-# }
-# setMethod("summary", "gama", summary.gama)
-
-# view.method = c("total.sum", "pca", "both")
-plot <- function(x = NULL, ...) { UseMethod("plot.gama") }
-
-
+#plot <- function(x = NULL, ...) { UseMethod("plot.gama") }
 plot.gama <- function(x = NULL, view.method = "pca", ... ) {
 
   dat <- x@original.data
   dat$clusters <- x@cluster
-
 
   if (view.method == "total.sum") {
 

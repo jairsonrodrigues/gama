@@ -7,9 +7,9 @@
 }
 \usage{
 gama(data, k = NA, scale = FALSE, crossover.rate = 0.9,
-     mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
-     generations = 100, seed.p = 42, fitness.criterion = "ASW",
-     penalty.function = NULL, plot.internals = TRUE, \dots)
+                   mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
+                   generations = 100, seed.p = 42, fitness.criterion =
+                   "ASW", penalty.function = NULL, plot.internals = TRUE, \dots)
 }
 \arguments{
   \item{data}{the dataset to segment into k partitions. Must be numerical, because GAMA only works for integer ou real values.}
@@ -49,9 +49,9 @@ Hubert, L.J., Levin, J.R. A general statistical framework for assessing categori
 
 }
 \examples{
-
+\dontrun{
 # loads data about CPU execution metrics of a distributed
-#version of Alternating Least Squares (ALS) algorithm
+# version of Alternating Least Squares (ALS) algorithm
 data(cpu.als)
 
 # a specific function to calculate penalties for CPU execution metrics
@@ -76,10 +76,10 @@ my.penalty <- function(m.individual,...) {
 
 # call the gama clustering to maximize ASW criterion (default)
 # and delegates to GAMA choose the best k value
-gama.obj <- gama(cpu.als, penalty.function = my.penalty)
+gama.obj <- gama(data = cpu.als, penalty.function = my.penalty)
 
 print(gama.obj)
-
+}
 }
 
 \keyword{file}

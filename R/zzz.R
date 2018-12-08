@@ -1,7 +1,5 @@
-GAStartupMessage <- function()
-{
-  # Startup message obtained as
-  # > figlet GA
+GamaWelcomeMessage <- function() {
+
   msg <- c(paste0(
     "GAMA - Genetic Approach to MAximize clustering criterion, version ", packageVersion("gama")),
     "\nType 'citation(\"gama\")' for citing this R package in publications.")
@@ -11,9 +9,9 @@ GAStartupMessage <- function()
 .onAttach <- function(lib, pkg)
 {
   # unlock .ga.default variable allowing its modification
-  #unlockBinding(".gama.default", asNamespace("gama"))
+  #unlockBinding(".gama", asNamespace("gama"))
   # startup message
-  msg <- GAStartupMessage()
+  msg <- GamaWelcomeMessage()
   if(!interactive())
     msg[1] <- paste("Package 'gama' version", packageVersion("GA"))
   packageStartupMessage(msg)

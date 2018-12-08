@@ -25,18 +25,18 @@
 }
 
 \examples{
+\dontrun{
+  # loads data about CPU execution metrics of a distributed
+  # version of Alternating Least Squares (ALS) algorithm
+  data(cpu.als)
 
-# loads data about CPU execution metrics of a distributed
-# version of Alternating Least Squares (ALS) algorithm
-data(cpu.als)
+  # call the gama clustering algorithm
+  gamaObj <- gama(cpu.als, k = 4)
 
-# call the gama clustering algorithm
-gamaObj <- gama(cpu.als, k = 4)
+  # call the print.gama function to detail the clustering results
+  # note: print.gama uses generic function concept, which allows a call to print, only.
+  print(gamaObj)
 
-# call the print.gama function to detail the clustering results
-# note: print.gama uses generic function concept, which allows a call to print, only.
-print(gamaObj)
-
+  }
 }
-
 \keyword{file}

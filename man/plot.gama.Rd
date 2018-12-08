@@ -21,9 +21,10 @@ Mardia, K. V., J. T. Kent, and J. M. Bibby (1979) Multivariate Analysis, London:
 }
 
 \examples{
-
+\dontrun{
 # loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
+library(gama)
 data(cpu.als)
 
 # call the gama clustering algorithm
@@ -38,5 +39,5 @@ plot(gamaObj, view.method = "pca")
 plot(gamaObj, view.method = "total.sum")
 
 }
-
+}
 \keyword{file}
