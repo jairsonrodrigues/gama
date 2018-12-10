@@ -1,6 +1,7 @@
 # libraries are used along the code by explicit refer syntax package::function()
 source("R/fitness.R")
 source("R/bestk.R")
+source("R/util.R")
 
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("dims", "clusters", "observation", "pc.1", "pc.2"))
 
@@ -69,6 +70,19 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
   lower_bound <- unlist(lapply(lowers, function (x) { rep(x, k) } ))
   upper_bound <- unlist(lapply(uppers, function (x) { rep(x, k) } ))
 
+  # detect the O.S. to use apply correct call to parallelization
+  os <- get.os()
+
+  # choose SNOW mode for windows, multicore for OS X or Linux
+  # choose parallelization = FALSE if impossible to infer the O.S.
+  # see GA::ga, argument parallel, in documentation for details
+  parallelization <- switch (os, "windows" = "snow",
+                                  "linux" = "multicore",
+                                  "osx" = "multicore",
+                                  FALSE)
+
+  cat(paste("Detected O.S.:", os, "Parallel mode: ", parallelization, "\n", sep = " "))
+
   start.time <- Sys.time()
 
   .GlobalEnv$start.time <- start.time
@@ -90,7 +104,7 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
                     fitness = fitness.function, penalty.function,
                     lower = lower_bound,
                     upper = upper_bound,
-                    parallel = T,
+                    parallel = F,
                     monitor = F)
 
   end.time <- Sys.time()
