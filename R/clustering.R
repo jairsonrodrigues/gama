@@ -104,7 +104,7 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
                     fitness = fitness.function, penalty.function,
                     lower = lower_bound,
                     upper = upper_bound,
-                    parallel = F,
+                    parallel = parallelization,
                     monitor = F)
 
   end.time <- Sys.time()
@@ -196,7 +196,7 @@ print.gama <- function(x, ...) {
 setMethod("print", "gama", print.gama )
 
 #plot <- function(x = NULL, ...) { UseMethod("plot.gama") }
-plot.gama <- function(x = NULL, view.method = "pca", ... ) {
+plot.gama <- function(x = NULL, ... ) {
 
   dat <- x@original.data
   dat$clusters <- x@cluster
