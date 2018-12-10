@@ -195,13 +195,12 @@ print.gama <- function(x, ...) {
 }
 setMethod("print", "gama", print.gama )
 
-#plot <- function(x = NULL, ...) { UseMethod("plot.gama") }
-plot.gama <- function(x = NULL, ... ) {
+gama.plot.partitions <- function(gama.obj = NULL, view = "pca", ...) {
 
-  dat <- x@original.data
-  dat$clusters <- x@cluster
+  dat <- gama.obj@original.data
+  dat$clusters <- gama.obj@cluster
 
-  if (view.method == "total.sum") {
+  if (view == "total.sum") {
 
     total.sum = apply(dat, 1, sum)
 
@@ -212,7 +211,7 @@ plot.gama <- function(x = NULL, ... ) {
       ggplot2::labs(color = "partition") +
       ggplot2::xlab("observation") +
       ggplot2::ylab("total sum of dimensions")
-  } else if (view.method == "pca") {
+  } else if (view == "pca") {
 
     pca = prcomp(dat)
 
@@ -225,8 +224,7 @@ plot.gama <- function(x = NULL, ... ) {
       ggplot2::ylab("principal component 2")
   }
 
-  g <- g + ggplot2::ggtitle(paste("Gama partitions,", "view method = ", view.method, sep = " ")) + ggplot2::theme_minimal()
+  g <- g + ggplot2::ggtitle(paste("Gama partitions,", "view = ", view, sep = " ")) + ggplot2::theme_minimal()
   plot(g)
 }
-setMethod("plot", "gama", plot.gama)
 

@@ -1,6 +1,5 @@
 #exportPattern("^[[:alpha:]]+")
-export(gama, print.gama, plot.gama)
+export(gama, print.gama, gama.plot.partitions)
 importFrom("stats", "dist", "prcomp", "runif")
 importFrom("utils", "head", "packageVersion")
-S3method("plot", "gama")
 S3method("print", "gama")
