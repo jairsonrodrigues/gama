@@ -81,7 +81,7 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
                                   "osx" = "multicore",
                                   FALSE)
 
-  cat(paste("Detected O.S.:", os, "Parallel mode: ", parallelization, "\n", sep = " "))
+  cat("Detected O.S.:", os, ".\nParallel mode: ", parallelization, "\n", sep = " ")
 
   start.time <- Sys.time()
 
