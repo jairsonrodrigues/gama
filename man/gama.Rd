@@ -31,9 +31,32 @@ gama(data, k = NA, scale = FALSE, crossover.rate = 0.9,
 
     The default value is "ASW" and will be assumed if the user does not supply value or put an invalid entry.
   }
-  \item{penalty.function}{...}
-  \item{plot.internals}{...}
+  \item{penalty.function}{an optional user-specified function to be applied over fitness results, to penalize undesirable or incongruent individuals.}
+  \item{plot.internals}{if TRUE, the evolution of the fitness values and a Silhouette graphic will be display after the genetic search. The default value is TRUE.}
   \item{\dots}{other arguments that user may pass to the function.}
+
+
+}
+\details{
+
+A call to \code{gama} function should at least contain the argument \code{data}. In this case, the clustering will be done without penalities over individuals, aiming to maximize the \emph{silhouette} criterion, and the function will suggest the best value for \emph{k}, the optimal number of partitions. For the others arguments, the default values applied will be as defined in the call: no normalization or scaling, rates for crossover, mutation, and elitism equals 90\%, 1\%, and 5\%, respectivelly, population size of 25 individuals, 100 generations, and plot.internals = TRUE.
+
+A lot of other combinations of calls is possible, especially choosing the criteria to guide the maximization of the search ("ASW", "CH", "CI", "DI"), the k value, if known, and adjustments in the genetic parameters, like number of generations, population size, and mutation/crossover/elitism rates.
+
+The function \code{gama} returns an S4 object of class "gama". This object contains the following slots:
+
+\enumerate{
+	\item {original.data: } {the original dataset used for clustering.}
+	\item {centers: }{the k (partitions) x d (dimensions) matrix representation of the centroids who best segment the data into k partitions.}
+	\item {cluster: }{a vector of integers (from 1:k) indicating the cluster to which each point is allocated.}
+	\item {silhouette: }{the value for Average Silhouette Width index.}
+	\item {calinski_harabasz: }{the value for Calinski\_Harabasz index.}
+	\item {c_index: }{the value for C-index.}
+	\item {dunn_index: }{the value for Dunn index.}
+	\item {runtime: }{the total time spent by the clustering algorithm.}
+	\item {call: }{the string representation of the user call to the function \code{gama} and its parameters.}
+}
+
 
 }
 \references{

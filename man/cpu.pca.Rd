@@ -6,10 +6,10 @@
   Consumption metrics gathered during an execution of the Distributed Machine Learning algorithm Principal Component Analysis (PCA) in an eigth-node cluster, by using the Spark framework.
 }
 \usage{cpu.pca}
-\format{A data frame containing 938 observations and 5 dimensions:
+\format{A data frame containing 938 observations and four dimensions:
 
     \enumerate{
-    \item node: the identifier of each seven** nodes (from 0 to 6)
+    %\item node: the identifier of each seven** nodes (from 0 to 6)
     \item user: CPU usage by the algorithm
     \item system: CPU usage spent by Operating System (O.S.)
     \item iowait: waiting time for Input/Output (I/O) operations

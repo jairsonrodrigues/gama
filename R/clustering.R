@@ -51,10 +51,6 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
   .GlobalEnv$k = k
   .GlobalEnv$dims = ncol(data)
 
-  s <- "gareal_lsSelection"
-  m <- "gareal_rsMutation"
-  c <- "gareal_blxCrossover"
-
   elit.rate = floor(pop.size * elitism)
 
   # distance matrix
@@ -76,7 +72,9 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
   # choose SNOW mode for windows, multicore for OS X or Linux
   # choose parallelization = FALSE if impossible to infer the O.S.
   # see GA::ga, argument parallel, in documentation for details
-  parallelization <- switch (os, "windows" = "snow",
+  # Obs: to avoid compatibility problems with library PARALLEL on windows,
+  # the parallelization for this O.S. will be disabled.
+  parallelization <- switch (os, "windows" = FALSE,
                                   "linux" = "multicore",
                                   "osx" = "multicore",
                                   FALSE)
@@ -87,6 +85,13 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
 
   .GlobalEnv$start.time <- start.time
   .GlobalEnv$checked.time <- start.time
+
+  set.seed(seed.p)
+
+  # as defined by experimental procedure
+  s <- "gareal_lrSelection"
+  m <- "gareal_blxCrossover"
+  c <- "gareal_nraMutation"
 
   # call GA functions
   genetic <- GA::ga(type = "real-valued",
@@ -100,7 +105,6 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
                     pmutation = mutation.rate,
                     pcrossover = crossover.rate,
                     maxiter = generations,
-                    #maxFitness = 1.0,
                     fitness = fitness.function, penalty.function,
                     lower = lower_bound,
                     upper = upper_bound,
@@ -141,7 +145,7 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
   }
 
   object <- methods::new("gama",
-                original.data = data,
+                original.data = as.data.frame(data),
                 centers = solution.df,
                 cluster = as.vector(which.dists),
                 silhouette = summary(asw)$avg.width,
@@ -194,37 +198,3 @@ print.gama <- function(x, ...) {
   print(x@runtime)
 }
 setMethod("print", "gama", print.gama )
-
-gama.plot.partitions <- function(gama.obj = NULL, view = "pca", ...) {
-
-  dat <- gama.obj@original.data
-  dat$clusters <- gama.obj@cluster
-
-  if (view == "total.sum") {
-
-    total.sum = apply(dat, 1, sum)
-
-    dat$total.sum <- total.sum
-    dat$observation <- 1:nrow(dat)
-    g <- ggplot2::ggplot(dat, ggplot2::aes(x = observation, y = total.sum, color = factor(clusters))) +
-      ggplot2::geom_point() +
-      ggplot2::labs(color = "partition") +
-      ggplot2::xlab("observation") +
-      ggplot2::ylab("total sum of dimensions")
-  } else if (view == "pca") {
-
-    pca = prcomp(dat)
-
-    dat$pc.1 <- pca$x[,"PC1"]
-    dat$pc.2 <- pca$x[,"PC2"]
-    g <- ggplot2::ggplot(dat, ggplot2::aes(x = pc.1, y = pc.2, color = factor(clusters))) +
-      ggplot2::geom_point() +
-      ggplot2::labs(color = "partition") +
-      ggplot2::xlab("principal component 1") +
-      ggplot2::ylab("principal component 2")
-  }
-
-  g <- g + ggplot2::ggtitle(paste("Gama partitions,", "view = ", view, sep = " ")) + ggplot2::theme_minimal()
-  plot(g)
-}
-

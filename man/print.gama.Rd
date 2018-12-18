@@ -21,7 +21,7 @@
 
 }
 \seealso{
-  \code{\link{gama}, \link{plot.gama}}.
+  \code{\link{gama}, \link{gama.plot.partitions}}.
 }
 
 \examples{

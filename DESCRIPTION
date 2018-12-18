@@ -1,7 +1,7 @@
 Package: gama
 Type: Package
 Title: Genetic Approach to MAximize clustering criterion
-Version: 1.0
+Version: 0.2
 Date: 2018-11-26
 Author: Jairson Rodrigues
 Authors@R: c(person("Jairson", "Rodrigues", role = c("aut", "cre"),
