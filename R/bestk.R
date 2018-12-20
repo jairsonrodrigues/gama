@@ -72,7 +72,7 @@ best.k.minimal <- function (dataset = NULL) {
 # Calculates an aproximation of the second derivative of a set of points
 # the maximum second derivative will be a good choice for the inflexion point (the elbow or knee)
 # https://stackoverflow.com/questions/2018178/finding-the-best-trade-off-point-on-a-curve
-# https://raghavan.usc.edu/papers/kneedle-simplex11.pdf (Finding a “Kneedle” in a Haystack:
+# https://raghavan.usc.edu/papers/kneedle-simplex11.pdf (Finding a "Kneedle" in a Haystack:
 # Detecting Knee Points in System Behavior)
 where.is.knee <- function(points = NULL) {
 
