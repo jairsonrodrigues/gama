@@ -6,14 +6,25 @@
 
 }
 \usage{
-gama(data, k = NA, scale = FALSE, crossover.rate = 0.9,
+gama(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
                    mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
                    generations = 100, seed.p = 42, fitness.criterion =
                    "ASW", penalty.function = NULL, plot.internals = TRUE, \dots)
 }
 \arguments{
   \item{data}{the dataset to segment into k partitions. Must be numerical, because GAMA only works for integer ou real values.}
-  \item{k}{the best value for the optimal number of partitions. The user may ommit this argument, in this way, the algorithm will use internal validation criterias for automatically estimate the best k value for the data.}
+  \item{k}{the best value for the optimal number of partitions. May be:
+  \enumerate{
+    \item an integer positive value: when known, the user may specify directly the best value for k;
+
+    \item a string value: 'minimal', for estimation based on 'elbow' in Within-cluster Sum of Squares Error graphic or 'broad', alternative to estimate the best k by majority voting between 24 distinct internal validation criteria for automatically estimate the best k value for the data.
+  }
+
+  The user may ommit this argument, in this way, the default value 'broad' will be used.
+  }
+
+
+
   \item{scale}{if the dataset will be scaled and normalized before segmentation. Default value is FALSE.}
   \item{crossover.rate}{the probability of crossover between pairs of chromosomes. Default value is 0.9.}
   \item{mutation.rate}{the probability of mutation in a parent chromosome. Usually mutation occurs with a small probability. Default value is 0.01.}

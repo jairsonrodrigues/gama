@@ -1,3 +1,8 @@
+
+
+
+# discover the O.S. to choose the correct way to use (or not)
+# CPU parallelization
 get.os <- function(){
   sysinf <- Sys.info()
   if (!is.null(sysinf)){

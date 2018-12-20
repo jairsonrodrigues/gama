@@ -22,7 +22,7 @@ pop.f <- function(object) {
   return(population)
 }
 
-gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
+gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
                          mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
                          generations = 100, seed.p = 42,
                          fitness.criterion = "ASW",
@@ -43,9 +43,21 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
     data <- scale(data, center = TRUE, scale = TRUE)
   }
 
-  if (is.na(k)) {
-    k <- best.k(dataset = data)
+  # if k exists
+  if (!is.na(k)) {
+    #if k is string (a method to choose the estimative)
+    if (is.character(k)) {
+      estimative.method <- k
+      k <- gama.how.many.k(dataset = data, method = estimative.method)
+    } else if (k <= 1) {
+      print("Please, set a valid input for k: the number of partitions or the method (minimal or broad) to estimate it.")
+      break
+    }
   }
+
+  # if (is.na(k)) {
+  #   k <- gama.how.many.k(dataset = data, method = )
+  # }
 
   .GlobalEnv$data <- data
   .GlobalEnv$k = k
@@ -90,8 +102,8 @@ gama <- function(data, k = NA, scale = FALSE, crossover.rate = 0.9,
 
   # as defined by experimental procedure
   s <- "gareal_lrSelection"
-  m <- "gareal_blxCrossover"
-  c <- "gareal_nraMutation"
+  c <- "gareal_blxCrossover"
+  m <- "gareal_nraMutation"
 
   # call GA functions
   genetic <- GA::ga(type = "real-valued",
