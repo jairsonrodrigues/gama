@@ -1,4 +1,42 @@
+# This function takes a gama object and plots the partitions found by the algorithm.
+# The partitions will be coloured accordingly the distribution of the clusters.
 gama.plot.partitions <- function(gama.obj = NULL, view = "pca", ...) {
+
+  # --- arguments validation --- #
+  Check <- ArgumentCheck::newArgCheck()
+
+  if (is.null(gama.obj))
+    ArgumentCheck::addError(
+      msg = "'gama.obj' can not be NULL",
+      argcheck = Check
+    )
+
+  if (class(gama.obj) != 'gama')
+    ArgumentCheck::addError(
+      msg = "'gama.obj' must be a gama object.",
+      argcheck = Check
+    )
+
+  if (is.null(view)) {
+    ArgumentCheck::addError(
+      msg = "'view' can not be NULL",
+      argcheck = Check
+    )
+  } else if (!(view %in% c('pca', 'total.sum')))
+    ArgumentCheck::addError(
+      msg = "'view' must be etiher 'pca' or 'total.sum'.",
+      argcheck = Check
+    )
+
+  ArgumentCheck::finishArgCheck(Check)
+
+  # --- final of arguments validation --- #
+
+  # to avoid R CMD check problems (the checker considers
+  # these variables as global not declared)
+  observation <- NA
+  total.sum <- NA
+  clusters <- NA
 
   dat <- gama.obj@original.data
   dat$clusters <- gama.obj@cluster
@@ -42,29 +80,3 @@ gama.plot.partitions <- function(gama.obj = NULL, view = "pca", ...) {
   g <- g + ggplot2::ggtitle(paste("Gama partitions,", "view = ", view, sep = " ")) + ggplot2::theme_minimal()
   plot(g)
 }
-
-# gama.plot.dataset <- function(data = NULL) {
-#
-#   dims <- ncol(data)
-#
-#   if (dims > 2) {
-#     pca = prcomp(data)
-#     x1 <- pca$x[,"PC1"]
-#     x2 <- pca$x[,"PC2"]
-#     lbl.1 <- "pc 1"
-#     lbl.2 <- "pc 2"
-#   } else {
-#     x1 <- data[,1]
-#     x1 <- data[,2]
-#     lbl.1 <- "x1"
-#     lbl.2 <- "x2"
-#   }
-#
-#   g <- ggplot2::ggplot(data, ggplot2::aes(x = x1, y = x2)) +
-#     ggplot2::geom_point() +
-#     ggplot2::labs(color = "partition") +
-#     ggplot2::xlab(lbl.1) +
-#     ggplot2::ylab(lbl.2) + ggplot2::theme_minimal()
-#
-#   g
-# }

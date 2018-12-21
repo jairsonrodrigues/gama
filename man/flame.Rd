@@ -21,7 +21,7 @@
 \references{
 L. Fu and E. Medico, \emph{FLAME, a novel fuzzy clustering method for the analysis of DNA microarray data}. BMC bioinformatics, 2007. 8(1): p. 3.
 
-P. Franti and S. Sieranoja, \emph{K-means properties on six clustering benchmark datasets,} vol. 48, no. 12. pp. 4743???4759, 2018.
+P. Franti and S. Sieranoja, \emph{K-means properties on six clustering benchmark datasets,} vol. 48, no. 12. pp. 4743-4759, 2018.
 
 }
 \keyword{datasets}

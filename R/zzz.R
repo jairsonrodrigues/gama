@@ -6,14 +6,11 @@ GamaWelcomeMessage <- function() {
   return(msg)
 }
 
-.onAttach <- function(lib, pkg)
-{
-  # unlock .ga.default variable allowing its modification
-  #unlockBinding(".gama", asNamespace("gama"))
+.onAttach <- function(lib, pkg) {
   # startup message
   msg <- GamaWelcomeMessage()
   if(!interactive())
-    msg[1] <- paste("Package 'gama' version", packageVersion("GA"))
+    msg[1] <- paste("Package 'gama', version", packageVersion("GA"))
   packageStartupMessage(msg)
   invisible()
 }

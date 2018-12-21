@@ -1,22 +1,44 @@
-# to avoid no visible binding for global variable
-## quiets concerns of R CMD check re: the .'s that appear in pipelines
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("k", "dat", "data", "d2"))
-
+# This function estimates the best k value for the number of partitions
+# the dataset should be segmented.
 gama.how.many.k <- function(dataset = NULL, method = "minimal") {
 
+    # --- arguments validation --- #
+    Check <- ArgumentCheck::newArgCheck()
+
+    if (is.null(dataset))
+      ArgumentCheck::addError(
+        msg = "'dataset' can not be NULL",
+        argcheck = Check
+      )
+
+    if (class(dataset) != 'data.frame')
+      ArgumentCheck::addError(
+        msg = "'dataset' must be a data.frame object.",
+        argcheck = Check
+      )
+
+    if (!(method %in% c('minimal', 'broad')))
+      ArgumentCheck::addError(
+        msg = "'method' must be one of the values: 'minimal' or 'broad'.",
+        argcheck = Check
+      )
+
+    ArgumentCheck::finishArgCheck(Check)
+
+    # --- final of arguments validation --- #
+
     best.k <- -1
+
     if (method == "minimal") {
       best.k <- best.k.minimal(dataset)
     } else if (method == "broad") {
       best.k <- best.k.broad(dataset)
-    } else {
-      #TODO verify an input error
-      print("error")
     }
 
     return (best.k)
 }
 
+# compute 24 methods by using NbClust package
 best.k.broad <- function(dataset = NULL) {
 
   cat("Looking for the best k value by 'broad' method...\n")
@@ -51,10 +73,7 @@ best.k.minimal <- function (dataset = NULL) {
           })
 
   best.k <- where.is.knee(wss)
-  #best.k <- elbow_finder(1:15, wss)
-  #angles <- angle.based.knee(wss)
-  #print(angles)
-  #best.k <- which.max(angles)
+
   plot(1:k.max, wss, type="b",
             xlab="Number of Clusters",
             ylab="Within Cluster Sum of Squares Error",
@@ -62,7 +81,7 @@ best.k.minimal <- function (dataset = NULL) {
 
   abline(v = best.k, lwd=1, lty=2, col = "red")
 
-  cat(paste("Best k suggestion by using second derivative over Within-Cluster Sum of Squares Error (WCSSE) graphic = ", best.k, ".\n", sep = ""))
+  cat(paste("Best k suggestion by using second derivative aproximation over Within-Cluster Sum of Squares Error (WCSSE) graphic = ", best.k, ". ", sep = ""))
   cat("See 'elbow' graphic for details.\n\n")
 
   return(best.k)

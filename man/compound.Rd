@@ -21,7 +21,7 @@
 \references{
 C.T. Zahn, \emph{Graph-theoretical methods for detecting and describing gestalt clusters}. IEEE Transactions on Computers, 1971. 100(1): p. 68-86.
 
-P. Franti and S. Sieranoja, \emph{K-means properties on six clustering benchmark datasets,} vol. 48, no. 12. pp. 4743???4759, 2018.
+P. Franti and S. Sieranoja, \emph{K-means properties on six clustering benchmark datasets,} vol. 48, no. 12. pp. 4743-4759, 2018.
 
 }
 \keyword{datasets}

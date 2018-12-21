@@ -21,7 +21,7 @@
 \references{
 A. Gionis, H. Mannila, and P. Tsaparas, \emph{Clustering aggregation}. ACM Transactions on Knowledge Discovery from Data (TKDD), 2007. 1(1): p. 1-30.
 
-P. Franti and S. Sieranoja, \emph{K-means properties on six clustering benchmark datasets,} vol. 48, no. 12. pp. 4743???4759, 2018.
+P. Franti and S. Sieranoja, \emph{K-means properties on six clustering benchmark datasets,} vol. 48, no. 12. pp. 4743-4759, 2018.
 
 }
 \keyword{datasets}

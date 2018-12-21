@@ -1,5 +1,4 @@
 #exportPattern("^[[:alpha:]]+")
-#export(gama, gama.plot.partitions, gama.plot.dataset, print.gama)
 export(gama, gama.plot.partitions, print.gama, gama.how.many.k)
 importFrom("stats", "dist", "prcomp", "runif", "kmeans")
 importFrom("utils", "head", "packageVersion")
