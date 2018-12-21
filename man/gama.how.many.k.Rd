@@ -21,21 +21,23 @@ Malika Charrad, Nadia Ghazzali, Veronique Boiteau, Azam Niknafs (2014). NbClust:
   \code{\link{gama}}.
 }
 
-\examples{
-  \dontrun{
-  # loads data about CPU execution metrics of a distributed
-  # version of Alternating Least Squares (ALS) algorithm
-  library(gama)
-  data(cpu.als)
+\examples{\dontshow{
+  # this call is necessary to avoid errors when
+  # running the tests of R CMD check
+  library(parallel)
+}# loads data about CPU execution metrics of a distributed
+# version of Alternating Least Squares (ALS) algorithm
+library(gama)
+data(cpu.als)
 
-  # call estimation by using minimal method (Elbow graphic)
-  k <- gama.how.many.k (cpu.als)
-  print(k)
+# call estimation by using minimal method (Elbow graphic)
+k <- gama.how.many.k (cpu.als)
+print(k)
 
-  # call estimation by using broad method (NbClust)
-  k <- gama.how.many.k (cpu.als, method = 'broad')
-  print(k)
+# call estimation by using broad method (NbClust)
+k <- gama.how.many.k (cpu.als, method = 'broad')
+print(k)
 
-  }
+}
 }
 \keyword{file}

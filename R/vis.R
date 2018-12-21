@@ -58,25 +58,34 @@ gama.plot.partitions <- function(gama.obj = NULL, view = "pca", ...) {
     dims <- ncol(gama.obj@original.data)
 
     if (dims > 2) {
-      pca = prcomp(dat)
+      # remove the last column (cluster ids) from PCA calculus
+      pca = prcomp(dat[-(dims +1)])
       x1 <- pca$x[,"PC1"]
       x2 <- pca$x[,"PC2"]
       lbl.1 <- "pc 1"
       lbl.2 <- "pc 2"
     } else {
       x1 <- dat[,1]
-      x1 <- dat[,2]
+      x2 <- dat[,2]
       lbl.1 <- "x1"
       lbl.2 <- "x2"
     }
 
-    g <- ggplot2::ggplot(dat, ggplot2::aes(x = x1, y = x2, color = factor(clusters))) +
-      ggplot2::geom_point() +
-      ggplot2::labs(color = "partition") +
-      ggplot2::xlab(lbl.1) +
-      ggplot2::ylab(lbl.2)
+    df <- data.frame(x1, x2, dat$clusters)
+    colnames(df) <- c("x1", "x2", "clusters")
+
+    y.min <- min(x2)
+    y.max <- max(x2)
+
+    g <-  ggplot2::ggplot(df, ggplot2::aes(x = x1, y = x2, color = factor(clusters))) +
+          ggplot2::geom_point(size = 1.8) +
+          ggplot2::labs(color = "partition") +
+          ggplot2::xlab(lbl.1) +
+          ggplot2::ylab(lbl.2) +
+          ggplot2::ylim(y.min, y.max)
   }
 
-  g <- g + ggplot2::ggtitle(paste("Gama partitions,", "view = ", view, sep = " ")) + ggplot2::theme_minimal()
+  g <- g + ggplot2::ggtitle(paste("gama partitions", sep = "")) +
+       ggplot2::theme_minimal(base_size = 16)
   plot(g)
 }
