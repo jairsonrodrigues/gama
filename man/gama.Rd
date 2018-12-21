@@ -6,13 +6,13 @@
 
 }
 \usage{
-gama(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
+gama(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.9,
                    mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
                    generations = 100, seed.p = 42, fitness.criterion =
                    "ASW", penalty.function = NULL, plot.internals = TRUE, \dots)
 }
 \arguments{
-  \item{data}{the dataset to segment into k partitions. Must be numerical, because GAMA only works for integer ou real values.}
+  \item{dataset}{the data to segment into k partitions. Must be numerical, because GAMA only works for integer ou real values.}
   \item{k}{the best value for the optimal number of partitions. May be:
   \enumerate{
     \item an integer positive value: when known, the user may specify directly the best value for k;

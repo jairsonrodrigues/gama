@@ -3,7 +3,7 @@ source("R/fitness.R")
 source("R/bestk.R")
 source("R/util.R")
 
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("dims", "clusters", "observation", "pc.1", "pc.2"))
+gama.env <- new.env(parent = emptyenv())
 
 # generates an initial population of candidate centers for partitions
 pop.f <- function(object) {
@@ -12,7 +12,7 @@ pop.f <- function(object) {
   upper <- object@upper
   nvars <- length(lower)
 
-  population <- matrix(as.double(NA), nrow = object@popSize, ncol = dims * k)
+  population <- matrix(as.double(NA), nrow = object@popSize, ncol = gama.env$dims * gama.env$k)
 
   # generate the initial population based on uniform distribution
   for(j in 1:nvars) {
@@ -22,12 +22,70 @@ pop.f <- function(object) {
   return(population)
 }
 
-gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
+# entry point of the gama package
+gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.9,
                          mutation.rate = 0.01, elitism = 0.05, pop.size = 25,
                          generations = 100, seed.p = 42,
                          fitness.criterion = "ASW",
                          penalty.function = NULL,
                          plot.internals = TRUE, ...) {
+
+  # --- arguments validation --- #
+  Check <- ArgumentCheck::newArgCheck()
+
+  if (is.null(dataset))
+    ArgumentCheck::addError(
+      msg = "'dataset' can not be NULL",
+      argcheck = Check)
+
+  if (class(dataset) != 'data.frame')
+    ArgumentCheck::addError(
+      msg = "'dataset' must be a data.frame object.",
+      argcheck = Check)
+
+  if (is.null(k))
+    ArgumentCheck::addError(
+      msg = "'k' can not be NULL",
+      argcheck = Check)
+
+  if (is.numeric(k)) {
+    # forces k to be an integer value
+    k <- as.integer(k)
+
+    if (k < 2) {
+      ArgumentCheck::addError(
+        msg = "'k' must be a positive integer value greater than one (k > 1), or one of the methods to estimate it: 'minimal' or 'broad'.",
+        argcheck = Check)
+    }
+  } else if (is.character(k)) {
+    if (!(k %in% c('minimal', 'broad')))
+      ArgumentCheck::addError(
+        msg = "'k' must be a positive integer value greater than one (k > 1), or one of the methods to estimate it: 'minimal' or 'broad'.",
+        argcheck = Check)
+  }
+
+  if (is.null(fitness.criterion)) {
+    ArgumentCheck::addError(
+      msg = "'fitness.criterion' can not be NULL.",
+      argcheck = Check)
+
+  } else if (!(fitness.criterion %in% c('ASW', 'CH', 'CI', 'DI'))) {
+    ArgumentCheck::addError(
+      msg = "'fitness.criterion' must be one of the criteria: 'ASW', 'CH', 'CI' or 'DI'.",
+      argcheck = Check)
+  }
+
+  if (!is.null(penalty.function)) {
+    if (class(penalty.function) != "function") {
+      ArgumentCheck::addError(
+        msg = "'penalty.function' must be a valid R function.",
+        argcheck = Check)
+    }
+  }
+
+  ArgumentCheck::finishArgCheck(Check)
+
+  # --- final of arguments validation --- #
 
   call <- match.call()
 
@@ -40,7 +98,7 @@ gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
                              fitness.asw)
 
   if (scale) {
-    data <- scale(data, center = TRUE, scale = TRUE)
+    dataset <- scale(dataset, center = TRUE, scale = TRUE)
   }
 
   # if k exists
@@ -48,32 +106,26 @@ gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
     #if k is string (a method to choose the estimative)
     if (is.character(k)) {
       estimative.method <- k
-      k <- gama.how.many.k(dataset = data, method = estimative.method)
-    } else if (k <= 1) {
-      print("Please, set a valid input for k: the number of partitions or the method (minimal or broad) to estimate it.")
-      break
+      k <- gama.how.many.k(dataset = dataset, method = estimative.method)
     }
   }
 
-  # if (is.na(k)) {
-  #   k <- gama.how.many.k(dataset = data, method = )
-  # }
-
-  .GlobalEnv$data <- data
-  .GlobalEnv$k = k
-  .GlobalEnv$dims = ncol(data)
+  dims <- ncol(dataset)
+  gama.env$dataset <- dataset
+  gama.env$k = k
+  gama.env$dims = dims
 
   elit.rate = floor(pop.size * elitism)
 
   # distance matrix
-  d <- dist(data, method = "euclidean", diag = FALSE, upper = FALSE)
+  d <- dist(dataset, method = "euclidean", diag = FALSE, upper = FALSE)
   d2 <- d^2
 
-  .GlobalEnv$d2 <- d2
+  gama.env$d2 <- d2
   rm(d); gc()
 
-  lowers <- apply(data, 2, min)
-  uppers <- apply(data, 2, max)
+  lowers <- apply(dataset, 2, min)
+  uppers <- apply(dataset, 2, max)
 
   lower_bound <- unlist(lapply(lowers, function (x) { rep(x, k) } ))
   upper_bound <- unlist(lapply(uppers, function (x) { rep(x, k) } ))
@@ -93,17 +145,16 @@ gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
 
   cat("Detected O.S.:", os, ". Parallel mode: ", parallelization, sep = " ")
 
-  start.time <- Sys.time()
-
-  .GlobalEnv$start.time <- start.time
-  .GlobalEnv$checked.time <- start.time
-
   set.seed(seed.p)
 
   # as defined by experimental procedure
   s <- "gareal_lrSelection"
   c <- "gareal_blxCrossover"
   m <- "gareal_nraMutation"
+
+  start.time <- Sys.time()
+  gama.env$start.time <- start.time
+  gama.env$checked.time <- start.time
 
   # call GA functions
   genetic <- GA::ga(type = "real-valued",
@@ -136,16 +187,16 @@ gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
   }
 
   # calculates the average silhouette width
-  which.dists <- apply(Rfast::dista(data, solution, "euclidean", square = TRUE), 1, which.min)
+  which.dists <- apply(Rfast::dista(dataset, solution, "euclidean", square = TRUE), 1, which.min)
 
   asw <- cluster::silhouette(which.dists, d2)
-  ch <- clusterCrit::intCriteria(as.matrix(data), which.dists, "Calinski_Harabasz")
-  ci <- clusterCrit::intCriteria(as.matrix(data), which.dists, "C_index")
-  di <- clusterCrit::intCriteria(as.matrix(data), which.dists, "Dunn")
+  ch <- clusterCrit::intCriteria(as.matrix(dataset), which.dists, "Calinski_Harabasz")
+  ci <- clusterCrit::intCriteria(as.matrix(dataset), which.dists, "C_index")
+  di <- clusterCrit::intCriteria(as.matrix(dataset), which.dists, "Dunn")
 
   # builds the solution object
   solution.df <- as.data.frame(solution)
-  colnames(solution.df) <- colnames(data)
+  colnames(solution.df) <- colnames(dataset)
   solution.df <- solution.df[with(solution.df, order(apply(solution.df, 1, sum))), ]
 
   # plot the results
@@ -157,7 +208,7 @@ gama <- function(data, k = "broad", scale = FALSE, crossover.rate = 0.9,
   }
 
   object <- methods::new("gama",
-                original.data = as.data.frame(data),
+                original.data = as.data.frame(dataset),
                 centers = solution.df,
                 cluster = as.vector(which.dists),
                 silhouette = summary(asw)$avg.width,

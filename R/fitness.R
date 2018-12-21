@@ -1,12 +1,12 @@
-# to avoid message: no visible binding for global variable
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("k", "data", "d2"))
-
 # Maximizing solutions through Average Silhouette Width (ASW) criterion;
 # from -1 (the worst) to 1 (the best).
 fitness.asw <- function(individual, penalty.function = NULL, ...) {
 
-  dims <- length(individual)/k
+  k <- gama.env$k
+  data <- gama.env$dataset
+  d2 <- gama.env$d2
 
+  dims <- length(individual)/k
   fitness.value <- NA
 
   m.individual <- matrix(individual, nrow = k, ncol = dims)
@@ -37,6 +37,10 @@ fitness.asw <- function(individual, penalty.function = NULL, ...) {
 # Maximizing solutions through Calinski Harabasz (CH) criterion.
 # The higher the value, the "better" is the solution.
 fitness.ch <- function(individual, penalty.function = NULL, ...) {
+
+  k <- gama.env$k
+  data <- gama.env$dataset
+  d2 <- gama.env$d2
 
   dims <- length(individual)/k
   fitness.value <- NA
@@ -76,6 +80,10 @@ fitness.ch <- function(individual, penalty.function = NULL, ...) {
 # https://stats.stackexchange.com/questions/343878/computation-of-c-index-for-cluster-validation
 fitness.ci <- function(individual, penalty.function = NULL, ...) {
 
+  k <- gama.env$k
+  data <- gama.env$dataset
+  d2 <- gama.env$d2
+
   dims <- length(individual)/k
   fitness.value <- NA
 
@@ -111,6 +119,10 @@ fitness.ci <- function(individual, penalty.function = NULL, ...) {
 # reliable because of re-partitioning the results with the hard partition method. (Balasko, et al, 2005)
 fitness.di <- function(individual, penalty.function = NULL, ...) {
 
+  k <- gama.env$k
+  data <- gama.env$dataset
+  d2 <- gama.env$d2
+
   dims <- length(individual)/k
   fitness.value <- NA
 
@@ -134,5 +146,4 @@ fitness.di <- function(individual, penalty.function = NULL, ...) {
     }
   }
   return (fitness.value)
-
 }
