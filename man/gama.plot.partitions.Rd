@@ -38,7 +38,5 @@ gama.plot.partitions(gamaObj, view.method = "pca")
 
 # a call to gama.plot.partitions function with "Total Sum" of dimensions view method
 gama.plot.partitions(gamaObj, view.method = "total.sum")
-
-}
 }
 \keyword{file}

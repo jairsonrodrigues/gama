@@ -1,4 +1,4 @@
-# libraries are used along the code by explicit refer syntax package::function()
+# libraries are used along the code by explicit refer syntax package::function(), excepts, parallel library
 source("R/fitness.R")
 source("R/bestk.R")
 source("R/util.R")
@@ -139,8 +139,8 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
   # Obs: to avoid compatibility problems with library PARALLEL on windows,
   # the parallelization for this O.S. will be disabled.
   parallelization <- switch (os, "windows" = FALSE,
-                                  "linux" = "multicore",
-                                  "osx" = "multicore",
+                                  "linux" = parallel::detectCores(logical = FALSE),
+                                  "osx" = parallel::detectCores(logical = FALSE),
                                   FALSE)
 
   cat("Detected O.S.:", os, ". Parallel mode: ", parallelization, sep = " ")
@@ -173,6 +173,7 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
                     upper = upper_bound,
                     parallel = parallelization,
                     monitor = F)
+
 
   end.time <- Sys.time()
   rt <- end.time - start.time

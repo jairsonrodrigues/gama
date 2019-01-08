@@ -82,11 +82,8 @@ J. Dunn. Well separated clusters and optimal fuzzy partitions. Journal of Cybern
 Hubert, L.J., Levin, J.R. A general statistical framework for assessing categorical clustering in free recall. Psychol. Bull., 1976, 83, 1072-1080
 
 }
-\examples{\dontshow{
-  # this call is necessary to avoid errors when
-  # running the tests of R CMD check
-  library(parallel)
-}# loads data about CPU execution metrics of a distributed
+\examples{\dontshow{library(parallel)}
+# loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
 data(cpu.als)
 

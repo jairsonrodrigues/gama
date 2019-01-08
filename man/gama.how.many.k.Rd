@@ -39,5 +39,4 @@ k <- gama.how.many.k (cpu.als, method = 'broad')
 print(k)
 
 }
-}
 \keyword{file}
