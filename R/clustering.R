@@ -1,4 +1,4 @@
-# libraries are used along the code by explicit refer syntax package::function()
+# libraries are used along the code by explicit refer syntax package::function(), excepts, parallel library
 source("R/fitness.R")
 source("R/bestk.R")
 source("R/util.R")
@@ -133,15 +133,24 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
   # detect the O.S. to use apply correct call to parallelization
   os <- get.os()
 
-  # choose SNOW mode for windows, multicore for OS X or Linux
-  # choose parallelization = FALSE if impossible to infer the O.S.
+  # choose parallelization = FALSE if impossible to infer the O.S. (or Windows)
+  # this call to parallel::detectCores considers only physical cores
   # see GA::ga, argument parallel, in documentation for details
   # Obs: to avoid compatibility problems with library PARALLEL on windows,
   # the parallelization for this O.S. will be disabled.
-  parallelization <- switch (os, "windows" = FALSE,
-                                  "linux" = "multicore",
-                                  "osx" = "multicore",
-                                  FALSE)
+  if (os == "linux" || os == "osx") {
+    # require(parallel)
+    # require(doParallel)
+
+    parallelization <-  parallel::detectCores(logical = FALSE)
+
+  } else if (os == "windows"){
+    cat("Windows detected, due to compatibility issues, we disable parallelization for windows.")
+    parallelization <- FALSE
+  } else {
+    cat("Unknown O.S., parallelization disabled.")
+    parallelization <- FALSE
+  }
 
   cat("Detected O.S.:", os, ". Parallel mode: ", parallelization, sep = " ")
 
@@ -174,6 +183,7 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
                     parallel = parallelization,
                     monitor = F)
 
+
   end.time <- Sys.time()
   rt <- end.time - start.time
 
@@ -199,14 +209,6 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
   colnames(solution.df) <- colnames(dataset)
   solution.df <- solution.df[with(solution.df, order(apply(solution.df, 1, sum))), ]
 
-  # plot the results
-  if (plot.internals) {
-    #par(mfrow=c(1,2))
-    plot(genetic, main = "Evolution")
-    plot(asw, main = "ASW")
-    #garbage <- dev.off()
-  }
-
   object <- methods::new("gama",
                 original.data = as.data.frame(dataset),
                 centers = solution.df,
@@ -219,6 +221,24 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
                 call = call)
 
   print(object)
+
+  # plot the results
+  if (plot.internals) {
+    plot(genetic, main = "Evolution")
+
+    lim <- 500
+
+    if (nrow(gama.env$dataset) > lim) {
+      cat("\nIMPORTANT!!!\nThe dataset contains ", nrow(gama.env$dataset), "rows. To improve the quality of the ASW graph, gama will generate a file 'asw_gama.pdf' in working directory.\n")
+      grDevices::pdf(file = 'asw_gama.pdf')
+    }
+
+    plot(asw, main = "Average Silhouette Width")
+
+    if (nrow(gama.env$dataset) > lim) {
+      garbage <- grDevices::dev.off()
+    }
+  }
 
   # return an object of class 'gama'
   return (object)

@@ -2,7 +2,7 @@
 \alias{gama}
 \title{Segments a dataset by using genetic search.}
 \description{
-  This function realizes a genetic search in order to segment a given dataset. The genetic algorithm evaluates individuals of a population to maximize (or minimize) a one of four user-specified criterion: Average Silhouette Width, Calinski-Harabasz index, C-index or Dunn index. The algorithm receives the optimal number of partitions (best k value) from the user or automatically suggests it.
+  This function realizes a genetic search in order to segment a given dataset. The genetic algorithm evaluates individuals of a population to maximize (or minimize) one of four user-specified criteria: Average Silhouette Width, Calinski-Harabasz index, C-index or Dunn index. The algorithm receives the optimal number of partitions (best k value) from the user or automatically suggests it.
 
 }
 \usage{
@@ -17,20 +17,20 @@ gama(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.9,
   \enumerate{
     \item an integer positive value: when known, the user may specify directly the best value for k;
 
-    \item a string value: 'minimal', for estimation based on 'elbow' in Within-cluster Sum of Squares Error graph or 'broad', alternative to estimate the best k by majority voting between 24 distinct internal validation criteria for automatically estimate the best k value for the data.
+    \item a string value: 'minimal', for estimation based on 'elbow' in Within-cluster Sum of Squares Error graph or 'broad', the alternative to estimate the best k by majority voting between 24 distinct internal validation criteria for automatically estimate the best k value for the data.
   }
 
-  The user may ommit this argument, in this way, the default value 'broad' will be used.
+  The user may omit this argument, in this way, the default value 'broad' will be used.
   }
 
 
 
-  \item{scale}{if the dataset will be scaled and normalized before segmentation. Default value is FALSE.}
-  \item{crossover.rate}{the probability of crossover between pairs of chromosomes. Default value is 0.9.}
-  \item{mutation.rate}{the probability of mutation in a parent chromosome. Usually mutation occurs with a small probability. Default value is 0.01.}
-  \item{elitism}{the number of best individuals to survive. Default value is the top 5\% individuals of population.}
-  \item{pop.size}{the number of individuals in the population. Default value is 25. Observation: this argument have a great impact on the performance of the search, due to increased number of matrix calculations when the population grows.}
-  \item{generations}{the number of generations to execute the search. Default value is 100.}
+  \item{scale}{if the dataset will be scaled and normalized before segmentation. The default value is FALSE.}
+  \item{crossover.rate}{the probability of crossover between pairs of chromosomes. The default value is 0.9.}
+  \item{mutation.rate}{the probability of mutation in a parent chromosome. Usually mutation occurs with a small probability. The default value is 0.01.}
+  \item{elitism}{the number of best individuals to survive. The default value is the top 5\% individuals of population.}
+  \item{pop.size}{the number of individuals in the population. The default value is 25. Observation: this argument have a great impact on the performance of the search, due to increased number of matrix calculations when the population grows.}
+  \item{generations}{the number of generations to execute the search. The default value is 100.}
   \item{seed.p}{an integer value containing the random number generator.}
   \item{fitness.criterion}{the key point of the genetic search. The algorithm will search for the ideal centroids that maximizes one of the pre-specified criteria:
     \enumerate{
@@ -82,15 +82,12 @@ J. Dunn. Well separated clusters and optimal fuzzy partitions. Journal of Cybern
 Hubert, L.J., Levin, J.R. A general statistical framework for assessing categorical clustering in free recall. Psychol. Bull., 1976, 83, 1072-1080
 
 }
-\examples{\dontshow{
-  # this call is necessary to avoid errors when
-  # running the tests of R CMD check
-  library(parallel)
-}# loads data about CPU execution metrics of a distributed
+\examples{
+# loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
 data(cpu.als)
 
-# a specific function to calculate penalties for CPU execution metrics
+# a user-defined function to calculate penalties for CPU execution metrics
 # whose does not allow the sum of loads above 100\%
 my.penalty <- function(m.individual,...) {
 
@@ -117,8 +114,8 @@ gama.obj <- gama(data = cpu.als, penalty.function = my.penalty)
 print(gama.obj)
 
 
+\dontrun{
 # more examples, PCA metrics dataset.
-
 data(cpu.pca)
 # this code estimates the best number of partitions
 # (broad method, majority voting between distinct 24 methods)
@@ -132,7 +129,7 @@ gama.obj <- gama(cpu.pca, k = best.k, plot.internals = FALSE, generations = 500)
 # it plots a graph by using the 'total.sum' visualization, which sums all the components
 # of the dataset and draws the partitions to which each element belongs
 gama.plot.partitions(gama.obj, view = "total.sum")
-
+}
 }
 
 \keyword{file}

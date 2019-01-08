@@ -1,13 +1,13 @@
 Package: gama
 Type: Package
 Title: Genetic Approach to MAximize Clustering Criterion
-Version: 1.0
-Date: 2018-12-20
+Version: 1.0.2
+Date: 2019-01-08
 Authors@R: c(person("Jairson", "Rodrigues", role = c("aut", "cre"),
          email = "jairson.rodrigues@univasf.edu.br",
          comment = c(ORCID = "0000-0003-1176-3903")))
 Maintainer: Jairson Rodrigues <jairson.rodrigues@univasf.edu.br>
-Description: A hybrid approach to perform clustering based on genetic algorithms search for best centers configurations in order to maximize (or minimize) one of the given internal validation criterion: Silhouette, Dunn Index, C Index or Calinski/Harabasz Index.
+Description: A hybrid approach to performing evolutionary hard partitional clustering based on a genetic algorithm search by using guided operators by information about the quality of individual clusters. The method looks for the best centers configuration to maximize (or minimize) one of the given internal validation criteria available: Silhouette, Dunn Index, C-Index or Calinski/Harabasz Index, for a fixed a priori known number of partitions, encoded as real-valued centroids.
 Imports: 
   ArgumentCheck,
   cluster, 
@@ -16,6 +16,8 @@ Imports:
   GA, 
   ggplot2, 
   methods,
+  parallel,
+  doParallel,
   Rfast
 License: GPL (>= 2)
 LazyData: yes

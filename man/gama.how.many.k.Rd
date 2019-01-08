@@ -21,11 +21,8 @@ Malika Charrad, Nadia Ghazzali, Veronique Boiteau, Azam Niknafs (2014). NbClust:
   \code{\link{gama}}.
 }
 
-\examples{\dontshow{
-  # this call is necessary to avoid errors when
-  # running the tests of R CMD check
-  library(parallel)
-}# loads data about CPU execution metrics of a distributed
+\examples{
+# loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
 library(gama)
 data(cpu.als)
@@ -38,6 +35,5 @@ print(k)
 k <- gama.how.many.k (cpu.als, method = 'broad')
 print(k)
 
-}
 }
 \keyword{file}

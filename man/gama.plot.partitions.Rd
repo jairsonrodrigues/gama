@@ -20,25 +20,20 @@ Mardia, K. V., J. T. Kent, and J. M. Bibby (1979) Multivariate Analysis, London:
   \code{\link{gama}, \link{print.gama}}.
 }
 
-\examples{\dontshow{
-  # this call is necessary to avoid errors when
-  # running the tests of R CMD check
-  library(parallel)
-}# loads data about CPU execution metrics of a distributed
+\examples{
+# loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
 library(gama)
 data(cpu.als)
 
 # the gama clustering algorithm call
-gamaObj <- gama(cpu.als, k = 2)
+gamaObj <- gama(cpu.als, k = 3)
 
 
 # a call to gama.plot.partitions function with "Principal Component Analysis" view method
 gama.plot.partitions(gamaObj, view.method = "pca")
 
 # a call to gama.plot.partitions function with "Total Sum" of dimensions view method
-gama.plot.partitions(gamaObj, view.method = "total.sum")
-
-}
+\dontrun{gama.plot.partitions(gamaObj, view.method = "total.sum")}
 }
 \keyword{file}
