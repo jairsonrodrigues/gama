@@ -83,6 +83,7 @@ Hubert, L.J., Levin, J.R. A general statistical framework for assessing categori
 
 }
 \examples{
+
 # loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
 data(cpu.als)
