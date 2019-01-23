@@ -9,7 +9,7 @@ gama.how.many.k(dataset = NULL, method = "minimal")
 }
 \arguments{
   \item{dataset}{the original dataset used for clustering.}
-  \item{method}{the method used to estimate the number of partitions. If 'minimal' is used, the function will perform estimation based on finding the 'elbow' in the Within-cluster Sum of Squares Error graphic. It uses second derivative aproximation, in order to suggest k. If 'broad' is used, the function will proceed a estimation by majority voting, by using the \pkg{NbClust} package.}
+  \item{method}{the method used to estimate the number of partitions. If 'minimal' is used, the function will perform estimation based on finding the 'elbow' in the Within-cluster Sum of Squares Error graphic. It uses a second derivative approximation, in order to suggest k. If 'broad' is used, the function will proceed an estimation by majority voting, by using the \pkg{NbClust} package.}
 
 }
 \references{
