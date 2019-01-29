@@ -1,0 +1,199 @@
+---
+title: "Using gama - a Genetic Approach to MAximize clustering criterion"
+author: "Jairson B. Rodrigues"
+date: "`r format(Sys.time(), '%d %b %Y')`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: false
+    #  highlight: null
+vignette: >
+  %\VignetteIndexEntry{Using gama - a Genetic Approach to MAximize clustering criterion}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+bibliography: refs.bib
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.align = "center", 
+               out.width = "65%",
+               fig.width = 4, fig.height = 4,
+               dev.args=list(pointsize=7),
+               par = TRUE, # needed for setting hook 
+               collapse = TRUE, # collapse input & ouput code in chunks
+               warning = FALSE)
+
+
+knit_hooks$set(par = function(before, options, envir)
+  { if(before && options$fig.show != "none")
+       par(family = "sans", mar=c(4.1,4.1,1.1,1.1), mgp=c(3,1,0), tcl=-0.5)
+})
+```
+
+# Introduction
+
+Clustering refers to the task of assign categories to describe a dataset and its points according to its similarities or dissimilarities. It consists of unsupervised learning to detect hidden structures and to separate the data into partitions whose elements in the same partition are similar to each other and dissimilar to the elements in the other partitions, in agreement with some criterion or distance metric. It is widely used to classify datasets when the target class is not known.
+
+@jain1988algorithms divide the clustering techniques into three generous categories: nonexclusive overlapping, partitional, and hierarchical. While overlapping algorithms can be subdivided in *soft* --- full pertinence to one or more clusters, or *fuzzy* --- degrees of pertinence to one or more clusters; the hierarchical and partitional clustering are related to each other, in as much as they are both *hard* partitions --- mutually disjoint subsets, and the first one is an encapsulated sequence of the second one. 
+
+There are a broad variety of methods and algorithms to do hard, hierarchical or overlapping clustering. One of the most popular, simple and still widely used clustering algorithms, *K-means*, was first published in 1955. After that, thousands of clustering algorithms have been published since then. Some of them emerging in useful research directions, including semi-supervised clustering, ensemble clustering, simultaneous feature selection during data clustering, and large scale data clustering [@Jain2010]. 
+
+Another way to do clustering is by using evolutionary approaches to find the best partitions. From an optimization perspective, clustering can be formally considered as a particular kind of *NP-hard* grouping problem [@falkenauer1998genetic]. Under this assumption, a large number of evolutionary algorithms for solving clustering problems have been proposed in the literature. These algorithms are based on the optimization of some objective function (i.e., the so-called fitness function) that guides the evolutionary search [@hruschka2009survey].
+
+## gama concept
+
+Following the taxonomy proposed by @hruschka2009survey, we aim to present **gama**, a Genetic Approach to MAximize a clustering criteria --- a **R** package for evolutionary hard partitional clustering, by using guided operators (those guided by some information about the quality of individual clusters), for a fixed *a priori* known number of partitions, encoded as real-valued centroid based partitions.
+
+The main advantage of the proposed technique is to allow the user a way to realize clustering guided by the maximization of a chosen cluster validation criterion. The use of genetic search enables the algorithm to find a centroid configuration so good as bigger the number of generations used until the convergence for a local (reasonable) or global maximum, if there are any. 
+
+This document shows a few set of examples for usage of **gama** (version `r packageVersion("gama")`). It was written in **R Markdown**, using the [knitr] [@knitr] package. See also `help(package="gama")` for a list of available functions and methods. 
+
+Hereafter, we assume that the **gama** package is already installed and loaded in the current **R** session, by entering the following command:
+
+```{r, message = FALSE, echo=TRUE}
+library(gama)
+```
+
+## Available datasets
+
+We deployed **gama** with six different datasets, all of them having real number values. Two of them are in-house datasets about CPU consumption metrics from a real big data processing platform during execution of distributed machine learning (DML) algorithms. The others are synthetic datasets made available by the scientific community for benchmark purposes [@ClusteringDatasets]. They are specified, in sequence.
+
+### In-house datasets
+
+To collect CPU execution metrics, we have run two distributed machine learning (DML) algorithms. The first one was a recommendation system problem solved by the execution of an *Alternating Least Squares (ALS)* [@goldberg1992using] and [@hu2008collaborative] over 1.68 GB dataset of users and products. The second algorithm was a dimensionality reduction problem solved by a *Principal Component Analysis (PCA)* [@Jolliffe2002] over 257 MB dataset composed of floating point numbers. The experiments were hosted on *Google Cloud Data Proc* cloud provider and composed of a master node and seven slave nodes, all of them having the same specification: a 16-core Intel Xeon CPU @ 2.60GHz, 2 threads per core, 106 GB RAM, 500 GB HDD storage and 375 GB SSD storage, managed by a *Debian GNU/Linux 8.10 (jessie)* operating system. The solid-state drive (SSD) was used on each node to support auxiliary operating system tasks. A total of 128 CPU cores formed the cluster, having yet 848 GB RAM, 3.4 TB of storage, big data processing framework *Apache Spark 2.2.0* [http://spark.apache.org] and *Apache Hadoop 2.8.2* [http://hadoop.apache.org].
+
+We collect, every five seconds, the CPU consumption metrics regarding user algorithm load, system load, I/O wait, and software interruption request. The datasets are described following:
+
+- *cpu.als*: a data frame containing 308 observations and four dimensions. The number of partitions is unknown;
+- *cpu.pca*: a data frame containing 938 observations and four dimensions. The number of partitions is unknown.
+
+```{r, message = FALSE, echo=FALSE}
+par(mfrow=c(1,2), pin=c(1.9, 2.3))
+components <-prcomp(cpu.als)
+plot(components$x[,1], components$x[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "cpu.als")
+components <-prcomp(cpu.pca)
+plot(components$x[,1], components$x[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "cpu.pca")
+```
+
+The images above shows the geometric shapes of the in-house datasets, decomposed from their four original dimensions to their two principal components. One can observe the number of partitions of both datasets is unknown, but there is a strong visual suggestion for three partitions in *cpu.pca*.
+
+### Third-party datasets
+
+Initially, all datasets had contained one more dimension. We intentionally removed the last dimension that corresponds to the label which the data point belongs.
+
+1. *aggregation*: a synthetic dataset [@gionis2007clustering] that contains features that are known to create difficulties for the selected algorithms such as narrow bridges between clusters, uneven-sized clusters, and so on. It contains 788 observations and two dimensions, intentionally forming seven partitions;
+2. *compound*: a synthetic dataset [@zahn1970graph] that contains groups of different density points, varied shapes, and necks between partitions. It contains 399 observations and two dimensions, forming six clusters;
+3. *flame*: a dataset used in the research of fuzzy clustering method for the analysis of DNA microarray data [@fu2007flame]. It contains 240 observations and two dimensions, intentionally forming two partitions;
+4. *paht_based*: a synthetic dataset [@chang2008robust] consisting of a circular cluster with an opening near the bottom and two Gaussian distributed clusters inside. It contains 300 observations and two dimensions, intentionally forming three partitions.
+
+```{r, message = FALSE, echo=FALSE}
+par(mfrow=c(2,2), pin=c(1.9,1.7)) 
+plot(aggregation[,1], aggregation[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "aggregation")
+plot(compound[,1], compound[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "compound")
+plot(flame[,1], flame[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "flame")
+plot(path.based[,1], path.based[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "path.based")
+```
+
+## Third-party software and data
+Some tools, techniques and third-party packages were applied to build **gama**. We used *Intel HiBench* [@Huang2010] big data benchmark framework to generate the datasets about CPU execution perfomance of large machine learning workloads. The other avaliable data in the package are synthetic datasets made available by the scientific community for clustering benchmark purposes [@ClusteringDatasets]. We also used the following libraries and **R** packages, they are: *Cluster* [@cluster2018] and *NbClust* [@NbClust2014] for cluster validation, *GA* [@JSSv053i04] for genetic algorithms, and *Rfast* [@rfast2018] to speed up **R** calculations over matrices . 
+
+# Examples
+
+## Segmentation of well-defined partitions
+
+In this example, we will be using the cpu.pca dataset. One can observe that the dataset has three well-separated partitions. This way, the gama function will be called with a specific value for k = 3, as follows:
+
+```{r, message = FALSE, echo=TRUE}
+data(cpu.als)
+
+# call gama evolutionary clustering for k = 3 partitions
+# plot.internals = FALSE / do not show fitness values evolution across generations
+set.seed(42)
+obj <- gama(dataset = cpu.pca, k = 3, plot.internals = FALSE)
+
+# plot the graph of partitions
+gama.plot.partitions(obj)
+```
+
+## Segmentation of an unknown number of partitions
+
+In this example, we will be using the cpu.als dataset. The best value for k will be derived by using the 'minimal' method of estimation (an approximation of the second derivatives to find the inflection point in the elbow graph). Once the dataset is about CPU load, one can observe the definition of a user function called *my.penalty* which avoid the the algorithm to choose points whose sum of CPU loads overflows 100% (a physical limit). This specific call specifies 500 generations, a penalty function, uses the default options to plot internal graphs (evolution and silhouette) and let the algorithm to infer the best value for k.
+
+```{r, message = FALSE, echo=FALSE}
+# loads data about CPU execution metrics of a distributed
+# version of Alternating Least Squares (ALS) algorithm
+data(cpu.als)
+
+# a user-defined function to calculate penalties for CPU execution metrics
+# whose does not allow the sum of loads above 100\%
+my.penalty <- function(m.individual,...) {
+
+  penalty <- 0
+
+  # counts how many centroids results in overflow (inequality > 100)
+  sums <- apply(m.individual, 1, sum)
+  overflow <- which(sums > 100)
+  num_constraints = length(overflow)
+
+  # if there are overflows, subtract each dimension
+  # by the maximum proportion of the excess x the number of overflows
+  if (num_constraints > 0) {
+     penalty <- num_constraints * max(abs(sums[overflow] -100)/sums[overflow])
+  }
+
+  return (penalty)
+}
+
+# call the gama clustering to maximize ASW criterion (default)
+# and delegates to GAMA choose the best k value
+set.seed(42)
+obj <- gama(data = cpu.als, penalty.function = my.penalty, generations = 500)
+
+gama.plot.partitions(obj, view = "total.sum")
+
+```
+
+One can observe the parameter view = 'total.sum'. This kind of partitions visualization plots the sum of all dimensions each observation belongs to. It is specially util in datasets like the cpu.als when the sum of dimensions it is important to the visualization purposes.
+
+## Segmentation of complex datasets
+
+In the next examples, we will be using the aggregation, compound, and path.based datasets. One can observe that the clusters have groups of different density points, varied shapes, and necks between partitions. The datasets contain features that are known to create difficulties for the selected algorithm such as narrow bridges between clusters and uneven-sized clusters.
+
+First, a call to the algorithm over the compound dataset with the already *a priori* known number k = 6. The method of evaluation was changed from default (silhouette) to Calinski-Harabasz index to exemplify the adaptable fitness criterion feature.
+
+
+```{r, message = FALSE, echo=FALSE}
+set.seed(42)
+obj <- gama(compound, k = 6, generations = 500, plot.internals = FALSE, fitness.criterion = "CH")
+gama.plot.partitions(obj)
+```
+
+The algorithm has not been able to detect complex forms like the clusters that exist within other clusters.
+
+Second, a call to detect partitions in aggregation dataset (k = 7) and *Dunn* index as fitness criterion.
+
+```{r, message = FALSE, echo=FALSE}
+set.seed(42)
+obj <- gama(dataset = aggregation, k = 7, generations = 1000, plot.internals = FALSE, fitness.criterion = "DI")
+gama.plot.partitions(obj)
+```
+
+Moreover, the path.based dataset, by calling a specific method to infer the best value for k, before calling the clustering algorithm.
+
+
+```{r, message = FALSE, echo=FALSE}
+set.seed(42)
+best.k <- gama.how.many.k(path.based, "minimal")
+obj <- gama(path.based, k = best.k, plot.internals = FALSE)
+gama.plot.partitions(obj)
+```
+
+
+--------------------
+```{r, echo=TRUE}
+sessionInfo()
+```
+--------------------
+
+# References

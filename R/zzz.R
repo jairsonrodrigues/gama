@@ -10,7 +10,7 @@ GamaWelcomeMessage <- function() {
   # startup message
   msg <- GamaWelcomeMessage()
   if(!interactive())
-    msg[1] <- paste("Package 'gama', version", packageVersion("GA"))
+    msg[1] <- paste("Package 'gama', version", packageVersion("gama"))
   packageStartupMessage(msg)
   invisible()
 }
