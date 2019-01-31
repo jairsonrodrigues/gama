@@ -1,3 +1,3 @@
-Version 1.0.1 (2019-01)
+Version 1.0.3 (2019-02)
 
 - First release on CRAN.

@@ -1,7 +1,6 @@
-# libraries are used along the code by explicit refer syntax package::function(), excepts, parallel library
+# libraries are used along the code by explicit refer syntax package::function()
 source("R/fitness.R")
 source("R/bestk.R")
-source("R/util.R")
 
 gama.env <- new.env(parent = emptyenv())
 
@@ -130,30 +129,6 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
   lower_bound <- unlist(lapply(lowers, function (x) { rep(x, k) } ))
   upper_bound <- unlist(lapply(uppers, function (x) { rep(x, k) } ))
 
-  # detect the O.S. to use apply correct call to parallelization
-  os <- get.os()
-
-  # choose parallelization = FALSE if impossible to infer the O.S. (or Windows)
-  # this call to parallel::detectCores considers only physical cores
-  # see GA::ga, argument parallel, in documentation for details
-  # Obs: to avoid compatibility problems with library PARALLEL on windows,
-  # the parallelization for this O.S. will be disabled.
-  if (os == "linux" || os == "osx") {
-    # require(parallel)
-    # require(doParallel)
-
-    parallelization <-  parallel::detectCores(logical = FALSE)
-
-  } else if (os == "windows"){
-    cat("Windows detected, due to compatibility issues, we disable parallelization for windows.")
-    parallelization <- FALSE
-  } else {
-    cat("Unknown O.S., parallelization disabled.")
-    parallelization <- FALSE
-  }
-
-  cat("Detected O.S.:", os, ". Parallel mode: ", parallelization, sep = " ")
-
   set.seed(seed.p)
 
   # as defined by experimental procedure
@@ -180,7 +155,7 @@ gama <- function(dataset = NULL, k = "broad", scale = FALSE, crossover.rate = 0.
                     fitness = fitness.function, penalty.function,
                     lower = lower_bound,
                     upper = upper_bound,
-                    parallel = parallelization,
+                    parallel = FALSE,
                     monitor = F)
 
 

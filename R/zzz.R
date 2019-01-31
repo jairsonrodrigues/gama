@@ -1,7 +1,7 @@
 GamaWelcomeMessage <- function() {
 
   msg <- c(paste0(
-    "GAMA - Genetic Approach to MAximize clustering criterion, version ", packageVersion("gama")),
+    "GAMA - Genetic Approach to Maximize clustering criterion, version ", packageVersion("gama")),
     "\nType 'citation(\"gama\")' for citing this R package in publications.")
   return(msg)
 }

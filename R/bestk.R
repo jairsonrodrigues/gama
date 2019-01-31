@@ -81,7 +81,7 @@ best.k.minimal <- function (dataset = NULL) {
 
   abline(v = best.k, lwd=1, lty=2, col = "red")
 
-  cat(paste("Best k suggestion by using second derivative aproximation over Within-Cluster Sum of Squares Error (WCSSE) graphic = ", best.k, ". ", sep = ""))
+  cat(paste("Best k suggestion by using second derivative aproximation over \n'Within-Cluster Sum of Squares Error' (WCSSE) graphic = ", best.k, ". ", sep = ""))
   cat("See 'elbow' graphic for details.\n\n")
 
   return(best.k)

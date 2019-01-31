@@ -21,19 +21,18 @@ Mardia, K. V., J. T. Kent, and J. M. Bibby (1979) Multivariate Analysis, London:
 }
 
 \examples{
-# loads data about CPU execution metrics of a distributed
-# version of Alternating Least Squares (ALS) algorithm
+# loads path.based dataset
 library(gama)
-data(cpu.als)
+data(path.based)
 
 # the gama clustering algorithm call
-gamaObj <- gama(cpu.als, k = 3)
-
+gamaObj <- gama(path.based, k = 2, generations = 30)
+# ** use at least 100 generations for simple datasets and 500 for complex datasets
 
 # a call to gama.plot.partitions function with "Principal Component Analysis" view method
-gama.plot.partitions(gamaObj, view.method = "pca")
+gama.plot.partitions(gamaObj)
 
-# a call to gama.plot.partitions function with "Total Sum" of dimensions view method
-\dontrun{gama.plot.partitions(gamaObj, view.method = "total.sum")}
+# a call to gama.plot.partitions
+\dontrun{gama.plot.partitions(gamaObj)}
 }
 \keyword{file}
