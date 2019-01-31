@@ -3,9 +3,12 @@ Type: Package
 Title: Genetic Approach to MAximize Clustering Criterion
 Version: 1.0.3
 Date: 2019-01-29
-Authors@R: c(person("Jairson", "Rodrigues", role = c("aut", "cre"),
-         email = "jairson.rodrigues@univasf.edu.br",
-         comment = c(ORCID = "0000-0003-1176-3903")))
+Authors@R: c(person(given = "Jairson", family ="Rodrigues", role = c("aut", "cre"),
+  email = "jairson.rodrigues@univasf.edu.br", comment = c(ORCID = "0000-0003-1176-3903")), 
+  person(given = "Germano", family ="Vasconcelos", role = c("aut", "ths"), 
+  email = "gcv@cin.ufpe.br", comment = c(ORCID = "0000-0002-1899-1506")), 
+  person(given = "Renato", family = "Tin\'{o}s", role = c("aut", "rev"),
+  email = "rtinos@ffclrp.usp.br", comment = c(ORCID = "0000-0003-4027-8851")))
 Maintainer: Jairson Rodrigues <jairson.rodrigues@univasf.edu.br>
 Description: A hybrid approach to performing evolutionary hard partitional clustering based on a genetic algorithm search by using guided operators by information about the quality of individual clusters. The method looks for the best centers configuration to maximize (or minimize) one of the given internal validation criteria available: Silhouette, Dunn Index, C-Index or Calinski/Harabasz Index, for a fixed a priori known number of partitions, encoded as real-valued centroids.
 Imports: 
@@ -16,8 +19,6 @@ Imports:
   GA, 
   ggplot2, 
   methods,
-  parallel,
-  doParallel,
   Rfast
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr

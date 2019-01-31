@@ -84,6 +84,20 @@ Hubert, L.J., Levin, J.R. A general statistical framework for assessing categori
 }
 \examples{
 
+# loading flame dataset
+data(flame)
+
+# segmentation of the flame dataset in k = 2 partitions
+# the 'plot.internals' says to the program do not plot the graphs about
+# genetic evolution search and silhouette index
+gama.obj <- gama(flame, k = 4, plot.internals = FALSE, generations = 30)
+# ** use at least 100 generations for simple datasets and 500 for complex datasets
+
+# it draws the partitions to which each element belongs
+gama.plot.partitions(gama.obj)
+
+\dontrun{
+
 # loads data about CPU execution metrics of a distributed
 # version of Alternating Least Squares (ALS) algorithm
 data(cpu.als)
@@ -108,28 +122,13 @@ my.penalty <- function(m.individual,...) {
   return (penalty)
 }
 
-# call the gama clustering to maximize ASW criterion (default)
-# and delegates to GAMA choose the best k value
-gama.obj <- gama(data = cpu.als, penalty.function = my.penalty)
+# call the gama clustering to maximize Dunn index criterion
+# by using 500 generations and delegates to GAMA to choose the best k value
+gama.obj <- gama(data = cpu.als, fitness.criterion = "DI",
+                generations = 500, penalty.function = my.penalty)
 
 print(gama.obj)
 
-
-\dontrun{
-# more examples, PCA metrics dataset.
-data(cpu.pca)
-# this code estimates the best number of partitions
-# (broad method, majority voting between distinct 24 methods)
-best.k <- gama.how.many.k(dataset = cpu.pca, method = 'broad')
-
-# now, it calls gama with 500 generations
-# the 'plot.internals' says to program do not plot the graphs about
-# genetic evolution search and silhouette index
-gama.obj <- gama(cpu.pca, k = best.k, plot.internals = FALSE, generations = 500)
-
-# it plots a graph by using the 'total.sum' visualization, which sums all the components
-# of the dataset and draws the partitions to which each element belongs
-gama.plot.partitions(gama.obj, view = "total.sum")
 }
 }
 

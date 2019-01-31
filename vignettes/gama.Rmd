@@ -1,23 +1,24 @@
 ---
 title: "Using gama - a Genetic Approach to MAximize clustering criterion"
-author: "Jairson B. Rodrigues"
+author: "Jairson Rodrigues, Germano Vasconcelos, Renato Tinós"
 date: "`r format(Sys.time(), '%d %b %Y')`"
 output: 
   rmarkdown::html_vignette:
     toc: true
     number_sections: false
-    #  highlight: null
+    css: "vignette.css"
 vignette: >
   %\VignetteIndexEntry{Using gama - a Genetic Approach to MAximize clustering criterion}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}  
+  %\VignetteEncoding{UTF-8}
 bibliography: refs.bib
 ---
 
 ```{r setup, include=FALSE}
 library(knitr)
 opts_chunk$set(fig.align = "center", 
-               out.width = "65%",
+               out.width="100%",
+               out.height="100%",
                fig.width = 4, fig.height = 4,
                dev.args=list(pointsize=7),
                par = TRUE, # needed for setting hook 
@@ -55,6 +56,16 @@ Hereafter, we assume that the **gama** package is already installed and loaded i
 library(gama)
 ```
 
+## Optimization problem
+In the domain of real numbers from the minimum to maximum values of the given dataset, the problem is to discover the centroid or centroids whom best separate the dataset into *k* partitions. The search will is guided by the maximization of one of four available clustering validation criteria.
+
+The best partition varies according to the nature of each criterion [@desgraupes2013clustering], as follows:
+
+- *Calinski-Harabasz*: starts in zero, the higher, the better; a direct maximization problem;
+-	*Silhouette*: ranges from -1 (the worst) to 1 (the best); a direct maximization problem;
+-	*Dunn Index*: starts in zero, the higher , the better; a direct maximization problem;
+-	*C-Index*: ranges from 1 (the worst) to 0 (the best); an inverse maximization problem. The algoritm needs to calcultate the maximization of the expression *1 - c_index*.
+
 ## Available datasets
 
 We deployed **gama** with six different datasets, all of them having real number values. Two of them are in-house datasets about CPU consumption metrics from a real big data processing platform during execution of distributed machine learning (DML) algorithms. The others are synthetic datasets made available by the scientific community for benchmark purposes [@ClusteringDatasets]. They are specified, in sequence.
@@ -69,7 +80,7 @@ We collect, every five seconds, the CPU consumption metrics regarding user algor
 - *cpu.pca*: a data frame containing 938 observations and four dimensions. The number of partitions is unknown.
 
 ```{r, message = FALSE, echo=FALSE}
-par(mfrow=c(1,2), pin=c(1.9, 2.3))
+par(mfrow=c(1,2), pin=c(1.4, 1.6), font = 1)
 components <-prcomp(cpu.als)
 plot(components$x[,1], components$x[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "cpu.als")
 components <-prcomp(cpu.pca)
@@ -88,11 +99,11 @@ Initially, all datasets had contained one more dimension. We intentionally remov
 4. *paht_based*: a synthetic dataset [@chang2008robust] consisting of a circular cluster with an opening near the bottom and two Gaussian distributed clusters inside. It contains 300 observations and two dimensions, intentionally forming three partitions.
 
 ```{r, message = FALSE, echo=FALSE}
-par(mfrow=c(2,2), pin=c(1.9,1.7)) 
-plot(aggregation[,1], aggregation[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "aggregation")
-plot(compound[,1], compound[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "compound")
-plot(flame[,1], flame[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "flame")
-plot(path.based[,1], path.based[,2], pch = 20, xlab = "pc1", ylab = "pc2", main = "path.based")
+par(mfrow=c(2,2), pin=c(1.2,1.2), font = 1) 
+plot(aggregation[,1], aggregation[,2], pch = 20, xlab = "x1", ylab = "x2", main = "aggregation")
+plot(compound[,1], compound[,2], pch = 20, xlab = "x1", ylab = "x2", main = "compound")
+plot(flame[,1], flame[,2], pch = 20, xlab = "x1", ylab = "x2", main = "flame")
+plot(path.based[,1], path.based[,2], pch = 20, xlab = "x1", ylab = "x2", main = "path.based")
 ```
 
 ## Third-party software and data
@@ -109,8 +120,7 @@ data(cpu.als)
 
 # call gama evolutionary clustering for k = 3 partitions
 # plot.internals = FALSE / do not show fitness values evolution across generations
-set.seed(42)
-obj <- gama(dataset = cpu.pca, k = 3, plot.internals = FALSE)
+obj <- gama(dataset = cpu.pca, k = 3, plot.internals = FALSE, seed.p = 42)
 
 # plot the graph of partitions
 gama.plot.partitions(obj)
@@ -147,8 +157,7 @@ my.penalty <- function(m.individual,...) {
 
 # call the gama clustering to maximize ASW criterion (default)
 # and delegates to GAMA choose the best k value
-set.seed(42)
-obj <- gama(data = cpu.als, penalty.function = my.penalty, generations = 500)
+obj <- gama(data = cpu.als, penalty.function = my.penalty, generations = 500, seed.p = 42)
 
 gama.plot.partitions(obj, view = "total.sum")
 
@@ -164,8 +173,7 @@ First, a call to the algorithm over the compound dataset with the already *a pri
 
 
 ```{r, message = FALSE, echo=FALSE}
-set.seed(42)
-obj <- gama(compound, k = 6, generations = 500, plot.internals = FALSE, fitness.criterion = "CH")
+obj <- gama(compound, k = 6, generations = 500, plot.internals = FALSE, fitness.criterion = "CH", seed.p = 42)
 gama.plot.partitions(obj)
 ```
 
@@ -174,18 +182,15 @@ The algorithm has not been able to detect complex forms like the clusters that e
 Second, a call to detect partitions in aggregation dataset (k = 7) and *Dunn* index as fitness criterion.
 
 ```{r, message = FALSE, echo=FALSE}
-set.seed(42)
-obj <- gama(dataset = aggregation, k = 7, generations = 1000, plot.internals = FALSE, fitness.criterion = "DI")
+obj <- gama(dataset = aggregation, k = 7, generations = 500, plot.internals = FALSE, fitness.criterion = "DI", seed.p = 42)
 gama.plot.partitions(obj)
 ```
 
 Moreover, the path.based dataset, by calling a specific method to infer the best value for k, before calling the clustering algorithm.
 
-
 ```{r, message = FALSE, echo=FALSE}
-set.seed(42)
 best.k <- gama.how.many.k(path.based, "minimal")
-obj <- gama(path.based, k = best.k, plot.internals = FALSE)
+obj <- gama(path.based, k = best.k, plot.internals = FALSE, seed.p = 42)
 gama.plot.partitions(obj)
 ```
 
