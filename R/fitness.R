@@ -73,7 +73,7 @@ fitness.ch <- function(individual, penalty.function = NULL, ...) {
 # Evaluate individuals according C-Indez (CI) criterion.
 # Minimize solutions through C-Index (CI) criterion; from 1 (the worst) to 0 (the best).
 #
-# C-Index varies between 0 and 1. The lower is the value the better is the cluster partition.
+# C-Index ranges from 0 to 1. The lower is the value, the better is the cluster partition.
 # REF: Hubert, L.J., Levin, J.R. A general statistical framework for assessing categorical clustering
 # in free recall. Psychol. Bull., 1976, 83, 1072-1080
 #

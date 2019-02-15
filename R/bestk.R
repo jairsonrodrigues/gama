@@ -76,8 +76,8 @@ best.k.minimal <- function (dataset = NULL) {
 
   plot(1:k.max, wss, type="b",
             xlab="Number of Clusters",
-            ylab="Within Cluster Sum of Squares Error",
-       main = paste("Elbow graphic, best k = ", best.k, sep = ""))
+            ylab="Within-Cluster Sum of Squares Error",
+       main = paste("Elbow graph, best k = ", best.k, sep = ""))
 
   abline(v = best.k, lwd=1, lty=2, col = "red")
 

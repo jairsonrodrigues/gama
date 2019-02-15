@@ -158,7 +158,6 @@ my.penalty <- function(m.individual,...) {
 # call the gama clustering to maximize ASW criterion (default)
 # and delegates to GAMA choose the best k value
 obj <- gama(data = cpu.als, penalty.function = my.penalty, generations = 150, seed.p = 42)
-
 gama.plot.partitions(obj, view = "total.sum")
 
 ```
